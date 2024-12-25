@@ -26,7 +26,7 @@ def run(data, modes):
     print(change_points)
 
     # 以下代码只用来画图
-    plot_idx = 1
+    plot_idx = data.shape[0] - 1
     err = err_data[plot_idx] / np.max(err_data[plot_idx]) * np.max(data[plot_idx])
     plt.plot(np.arange(0, len(data[plot_idx])), data[plot_idx])
     plt.plot(np.arange(0, len(err)), err)
@@ -39,7 +39,6 @@ def main():
         for file in sorted(files):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
-            print("yes")
             npz_file = np.load(os.path.join(root, file))
             state_data, mode_data = npz_file['arr_0'], npz_file['arr_1']
             # state_data 是一个n*m的数组，n是变量个数，m是采样点个数，表示每个变量的采样点

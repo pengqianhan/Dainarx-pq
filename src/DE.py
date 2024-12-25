@@ -74,7 +74,6 @@ class ODE:
         self.fit_state_size()
 
 
-
 class DE:
     def __init__(self, eq, init_state, bias=0):
         self.init_state = init_state

@@ -3,41 +3,43 @@ import os
 from math import *
 import src.DE as DE
 import matplotlib.pyplot as plt
+from src.HybridAutomata import HybridAutomata
+import json
 
 
-def creat_data(data_num: int, data_len: int, ode_list: list[DE.ODE], dT: float, init_state_list=None, path="./data/"):
+def creat_data(json_path: str, data_path: str, dT: float, times: float):
+    r"""
+    :param json_path: File path of automata.
+    :param data_path: Data storage path.
+    :param dT: Discrete time.
+    :param times: Total sampling time.
+    """
 
-    first_data = None
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.isabs(json_path):
+        json_path = os.path.join(current_dir, json_path)
+    if not os.path.isabs(data_path):
+        data_path = os.path.join(current_dir, data_path)
 
-    for data_idx in range(data_num):
-        for idx in range(len(ode_list)):
-            if init_state_list is None:
-                ode_list[idx].clear()
-            else:
-                ode_list[idx].clear(init_state_list[data_idx][idx])
-
-        res = []
-        need_num = data_len
-
-        while need_num > 0:
-            state = []
-            for idx in range(len(ode_list)):
-                state.append(ode_list[idx].next(dT))
-            res.append(state)
-            need_num -= 1
-        res = np.transpose(np.array(res))
-
-        if path is not None:
-            np.save(os.path.join(path, "test_data" + str(data_idx)), res)
-
-        if first_data is None:
-            first_data = res
-
-    return first_data
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+        sys = HybridAutomata(data['automation'])
+        state_id = 0
+        for init_state in data['init_state']:
+            state_data = []
+            mode_data = []
+            now = 0.
+            sys.reset(init_state)
+            while now < times:
+                now += dT
+                state, mode = sys.next(dT)
+                state_data.append(state)
+                mode_data.append(mode)
+            state_data = np.transpose(np.array(state_data))
+            mode_data = np.array(mode_data)
+            np.savez(os.path.join(data_path, "test_data" + str(state_id)), state_data, mode_data)
+            state_id += 1
 
 
 if __name__ == "__main__":
-    first_res = creat_data(1, 500, [DE.ODE(2, "-3 * x[1] - 25 * x[0] + 25", [0, 0, 0])], 0.01)
-    print(first_res[0])
-    plt.plot(np.arange(0, len(first_res[0])), first_res[0])
-    plt.show()
+    creat_data('automata/test.json', 'data', 0.01, 10)

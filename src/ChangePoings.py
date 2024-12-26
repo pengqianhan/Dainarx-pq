@@ -1,14 +1,16 @@
 import numpy as np
 
 
-def getFeature(data: np.array, dim: int) -> np.array:
+def getFeature(data: np.array, dim: int, *args) -> np.array:
     A = []
     b = []
     for i in range(len(data) - dim):
         this_line = []
         for j in range(dim):
             this_line.append(data[i + j])
-        A.append(this_line)
+        for fun in args:
+            this_line.append(fun(data[i:(i + dim)]))
+        A.append(np.flip(this_line))
         b.append(data[i + dim])
     return np.linalg.lstsq(A, b, rcond=None)[0]
 

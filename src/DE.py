@@ -51,7 +51,7 @@ class ODE:
         self.init_state = self.state.copy()
 
     def fit_state_size(self):
-        self.state = np.resize(self.state, (self.dim, ))
+        self.state = np.resize(self.state, (self.dim,))
 
     def rk_fun(self, y):
         res = np.roll(y, -1)
@@ -85,23 +85,41 @@ class ODE:
 
 
 class DE:
-    def __init__(self, eq, init_state, bias=0):
+    def __init__(self, eq, init_state, bias: int = 0, *other_fun):
         self.init_state = init_state
         self.state = deque(init_state)
-        self.eq = eq
-        self.dim = len(eq)
+        self.eq = eq.copy()
+        self.dim = len(eq) - len(other_fun)
         self.bias = bias
+        self.fit_state_size()
+        self.other_fun = other_fun
+
+    def fit_state_size(self):
+        while len(self.state) > self.dim:
+            self.state.pop()
+        while len(self.state) < self.dim:
+            self.state.append(0)
 
     def next(self):
         val = 0
         for i in range(self.dim):
             val += self.state[i] * self.eq[i]
+        fun_idx = 0
+        for fun in self.other_fun:
+            k = self.eq[fun_idx + self.dim]
+            val += fun(self.state) * k
+            fun_idx += 1
         self.state.appendleft(val)
         self.state.pop()
         return val
 
     def clear(self):
         self.state = self.init_state
+        self.fit_state_size()
+
+    def load(self, other_ed):
+        self.state = other_ed.state.copy()
+        self.fit_state_size()
 
 
 if __name__ == "__main__":

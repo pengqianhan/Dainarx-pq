@@ -17,7 +17,7 @@ class Node:
                 if var not in eq:
                     continue
                 fl = True
-                self.ode_list.append(ODE(eq, var_name=var))
+                self.ode_list.append(ODE(eq, var_name=var, method='rk'))
                 break
             if not fl:
                 raise Exception("There is no matching equation for variable {}.".format(var))

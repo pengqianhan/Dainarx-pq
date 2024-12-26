@@ -18,7 +18,7 @@ def analyticalExpression(expr, val_name):
 
 class ODE:
 
-    def __init__(self, eq: str, init_state=None, var_name='x'):
+    def __init__(self, eq: str, init_state=None, var_name='x', method='e'):
         r"""
         :param eq:
             Expression of ordinary differential equation.
@@ -41,25 +41,35 @@ class ODE:
             dim, expr = analyticalExpression(eq, var_name)
             self.dim = dim
             self.eq = eval("lambda x: " + expr)
-            self.state = init_state.copy()
+            self.state = np.array(init_state)
             self.fit_state_size()
             # check eq
             self.eq(self.state)
         except Exception as ex:
             raise Exception("invalid ode \"{}\"".format(eq), ex)
-
+        self.method = method
         self.init_state = self.state.copy()
 
     def fit_state_size(self):
-        while len(self.state) > self.dim + 1:
-            self.state.pop()
-        while len(self.state) < self.dim + 1:
-            self.state.append(0)
+        self.state = np.resize(self.state, (self.dim, ))
+
+    def rk_fun(self, y):
+        res = np.roll(y, -1)
+        res[self.dim - 1] = self.eq(y)
+        return res
 
     def next(self, dT: float):
-        self.state[-1] = self.eq(self.state)
-        for i in range(self.dim - 1, -1, -1):
-            self.state[i] = self.state[i] + dT * self.state[i + 1]
+        if self.method == "rk":
+            k1 = self.rk_fun(self.state)
+            k2 = self.rk_fun(self.state + 0.5 * dT * k1)
+            k3 = self.rk_fun(self.state + 0.5 * dT * k2)
+            k4 = self.rk_fun(self.state + dT * k3)
+            self.state = self.state + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+        else:
+            last_d = self.eq(self.state)
+            for i in range(self.dim - 1, -1, -1):
+                self.state[i] = self.state[i] + dT * last_d
+                last_d = self.state[i]
         return self.state[0]
 
     def clear(self, init_state=None):
@@ -95,7 +105,7 @@ class DE:
 
 
 if __name__ == "__main__":
-    ode = ODE("pos[2] = -3 * pos[1] - 25 * pos[0] + 25", var_name='pos')
+    ode = ODE("pos[2] = -3 * pos[1] - 25 * pos[0] + 25", var_name='pos', method='rk')
     # ode = DE([1, 1], [1, 1])
     X = []
     Y = []
@@ -104,5 +114,6 @@ if __name__ == "__main__":
         X.append(pos)
         Y.append(ode.next(0.01))
     print(time.time() - start)
+    print(Y[:10])
     plt.plot(X, Y)
     plt.show()

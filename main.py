@@ -1,51 +1,105 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from src.ChangePoings import FindChangePoint
+from src.ChangePoints import FindChangePoint
+from src.Clustering import clustering_learning
+from src.GuardLearning import guard_learning
+from src.ODELearning import ODELearning
 import os
 import re
 
 
-def getGT(data):
+def get_ture_chp(data):
     last = None
-    change_points = []
+    change_points = [1]
     idx = 0
     for now in data:
         if last is not None and last != now:
-            change_points.append(idx)
+            change_points.append(idx + 1)
         idx += 1
         last = now
+    change_points.append(1001)
     return change_points
 
 
-def run(data, modes):
-    gt = getGT(modes)
-    print("GT: ", gt)
-    change_points, err_data = FindChangePoint(data)
-    # change_points 是一个一维数组，合并所有轨迹的change points
-    # err_data 是一个n*m长的数组，n是变量个数，m是采样点个数，表示每个位置计算的误差
-    print(change_points)
+def run(trace, num_var, num_ud):
 
-    # 以下代码只用来画图
-    plot_idx = 1
-    err = err_data[plot_idx] / np.max(err_data[plot_idx]) * np.max(data[plot_idx])
-    plt.plot(np.arange(0, len(data[plot_idx])), data[plot_idx])
-    plt.plot(np.arange(0, len(err)), err)
-    plt.show()
+    #chp detection
+    x_lists = []
+    ud_lists = []
+
+    for i in range(len(trace)):
+        chp_per_var, chpoints, err_data = FindChangePoint(trace[i]['x'], num_var)
+        trace[i]['chpoints'] = chpoints
+        trace[i]['chpoints_per_var'] = chp_per_var
+        x_lists.append(trace[i]['x'])
+        ud_lists.append(trace[i]['ud'])
+
+        # trace[i]['chpoints'] = trace[i]['true_chp']
+        # trace[i]['chpoints_per_var'][0] = trace[i]['true_chp']
+        # trace[i]['chpoints_per_var'][1] = trace[i]['true_chp']
+
+    x = np.hstack(x_lists)
+    ud = 0
+    if num_ud:
+        ud = np.hstack(ud_lists)
+
+    #clustering
+    trace = clustering_learning(trace, x, ud, num_var, num_ud)
 
 
-def main():
+    # guard learning
+    models = guard_learning(trace)
+
+
+    #ODE Learning
+    #ode = ODELearning(trace, x, ud)
+
+    # svm test
+    model_now = models['1'][0]
+    x_test = np.array([[7.45983, 12.43306] ])
+    print(model_now.predict(x_test))
+    # print(model_now.coef_, model_now.intercept_)
+    # print(model_now.intercept_ / model_now.coef_[0])
+
+    #以下代码只用来画图
+        # plot_idx = 1
+        # err = err_data[plot_idx] / np.max(err_data[plot_idx]) * np.max(trace[i]['x'][plot_idx])
+        # plt.plot(np.arange(0, len(trace[i]['x'][plot_idx])), trace[i]['x'][plot_idx])
+        # plt.plot(np.arange(0, len(err)), err)
+        # plt.show()
+    print('done')
+
+
+def main(num_var, num_ud):
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     for root, dirs, files in os.walk(os.path.join(current_dir, "data")):
+
+        trace = []
+
         for file in sorted(files):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
-            print("yes")
+
             npz_file = np.load(os.path.join(root, file))
-            state_data, mode_data = npz_file['arr_0'], npz_file['arr_1']
-            # state_data 是一个n*m的数组，n是变量个数，m是采样点个数，表示每个变量的采样点
-            # mode_data 是一个m长的数组，表示每个时刻的状态
-            run(state_data, mode_data)
+            state_data_temp, mode_data_temp = npz_file['arr_0'], npz_file['arr_1']
+            trace_temp = {}
+
+            trace_temp['x'] = state_data_temp
+            trace_temp['mode'] = mode_data_temp
+            trace_temp['true_chp'] = get_ture_chp(mode_data_temp)
+            if num_ud == 0:
+                trace_temp['ud'] = None
+            else:
+                trace_temp['ud'] = npz_file['arr_2']
+
+            trace.append(trace_temp)
+
+        run(trace, num_var, num_ud)
+
 
 
 if __name__ == "__main__":
-    main()
+    num_x = 2
+    num_u = 0
+
+    main(num_x, num_u)

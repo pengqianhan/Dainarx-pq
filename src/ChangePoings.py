@@ -1,22 +1,22 @@
 import numpy as np
 
 
-def getFeature(data: np.array, dim: int, *args) -> np.array:
+def getFeature(data: np.array, dim: int, need_bias=False) -> np.array:
     A = []
     b = []
     for i in range(len(data) - dim):
         this_line = []
         for j in range(dim):
             this_line.append(data[i + j])
-        for fun in args:
-            this_line.append(fun(data[i:(i + dim)]))
-        A.append(np.flip(this_line))
+        this_line = list(reversed(this_line))
+        if need_bias:
+            this_line.append(1.)
+        A.append(this_line)
         b.append(data[i + dim])
     return np.linalg.lstsq(A, b, rcond=None)[0]
 
 
-def mergeChangePoints(data, th):
-    data = np.array(data).ravel()
+def mergeChangePoints(data, th: float):
     data = np.unique(np.sort(data))
     res = []
     last = None
@@ -36,18 +36,17 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
     :param merge_th: Change point merge threshold. The default value is 10.
     :return: change_points, err_data: The change points, and the error in each position of N variables.
     """
-    change_points_list = []
+    change_points = []
     error_datas = []
     for idx in range(data_list.shape[0]):
         data = data_list[idx]
         tail_len = 0
         pos = 0
         last = None
-        change_points = []
         error_data = []
 
         while pos + w < len(data):
-            res = getFeature(data[pos:(pos + w)], dim)
+            res = getFeature(data[pos:(pos + w)], dim, need_bias=True)
             if last is not None:
                 err = np.mean(np.abs(res - last))
                 error_data.append(err)
@@ -57,7 +56,6 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
                 tail_len = max(tail_len - 1, 0)
             last = res
             pos += 1
-        change_points_list.append(change_points)
         error_datas.append(error_data)
 
-    return mergeChangePoints(change_points_list, merge_th), np.array(error_datas)
+    return mergeChangePoints(change_points, merge_th), np.array(error_datas)

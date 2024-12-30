@@ -41,7 +41,7 @@ class ODE:
             dim, expr = analyticalExpression(eq, var_name)
             self.dim = dim
             self.eq = eval("lambda x: " + expr)
-            self.state = np.array(init_state)
+            self.state = np.array(init_state).astype(np.float64)
             self.fit_state_size()
             # check eq
             self.eq(self.state)
@@ -51,7 +51,7 @@ class ODE:
         self.init_state = self.state.copy()
 
     def fit_state_size(self):
-        self.state = np.resize(self.state, (self.dim,))
+        self.state = np.resize(self.state, (self.dim,)).astype(np.float64)
 
     def rk_fun(self, y):
         res = np.roll(y, -1)
@@ -101,7 +101,7 @@ class DE:
             self.state.append(0)
 
     def next(self):
-        val = 0
+        val = self.bias
         for i in range(self.dim):
             val += self.state[i] * self.eq[i]
         fun_idx = 0
@@ -123,7 +123,7 @@ class DE:
 
 
 if __name__ == "__main__":
-    ode = ODE("pos[2] = -3 * pos[1] - 25 * pos[0] + 25", var_name='pos', method='rk')
+    ode = ODE("x1[1] = 2 * x1[0]", var_name='x1', method='e', init_state=[21])
     # ode = DE([1, 1], [1, 1])
     X = []
     Y = []

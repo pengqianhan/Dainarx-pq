@@ -21,6 +21,13 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
     if not os.path.isabs(data_path):
         data_path = os.path.join(current_dir, data_path)
 
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
+    else:
+        files = os.listdir(data_path)
+        for file in files:
+            os.remove(os.path.join(data_path, file))
+
     with open(json_path, 'r') as f:
         data = json.load(f)
         sys = HybridAutomata.from_json(data['automation'])

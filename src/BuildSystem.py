@@ -13,12 +13,14 @@ class ModelFun:
     def __call__(self, *args):
         return self.model.predict([[*args]])[0] > 0.5
 
+
 def check(model, *x):
     print(*x)
     print([[*x]])
     print(model.predict([[*x]]))
     print(model.predict([[*x]])[0])
     print(model.predict([[*x]])[0] > 0.5)
+
 
 def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, other_items=""):
     data_of_mode = {}

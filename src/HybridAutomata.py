@@ -2,25 +2,30 @@ import copy
 import re
 
 import numpy as np
-from .DE import ODE
+from src.DE import ODE
 import json
 import matplotlib.pyplot as plt
 
 
 class Node:
-    def __init__(self, var_list, eq_list):
+    def __init__(self, var_list, ode_list):
         self.var_list = var_list.copy()
-        self.ode_list = []
+        self.ode_list = ode_list
+
+    @classmethod
+    def from_str(cls, var_list, eq_list):
+        ode_list = []
         for var in var_list:
             fl = False
             for eq in eq_list:
                 if var not in eq:
                     continue
                 fl = True
-                self.ode_list.append(ODE(eq, var_name=var, method='rk'))
+                ode_list.append(ODE(eq, var_name=var, method='rk'))
                 break
             if not fl:
                 raise Exception("There is no matching equation for variable {}.".format(var))
+        return cls(var_list, ode_list)
 
     def next(self, dT: float):
         res = []
@@ -38,24 +43,29 @@ class Node:
 
 
 class HybridAutomata:
-    def __init__(self, info):
+    def __init__(self, mode_list, adj, init_mode=None):
+        if init_mode is None:
+            self.mode_state = next(iter(adj.keys()))
+        else:
+            self.mode_state = init_mode
+        self.mode_list = mode_list
+        self.adj = adj
+
+    @classmethod
+    def from_json(cls, info):
         var_list = re.split(r"\s*,\s*", info['var'])
         mode_list = {}
 
         adj = {}
         for mode in info['mode']:
             mode_id = mode['id']
-            mode_list[mode_id] = Node(var_list, re.split(r"\s*,\s*", mode['eq']))
+            mode_list[mode_id] = Node.from_str(var_list, re.split(r"\s*,\s*", mode['eq']))
             adj[mode_id] = []
         for edge in info['edge']:
             u_v = re.findall(r'\d+', edge['direction'])
             fun = eval('lambda ' + info['var'] + ':' + edge['condition'])
             adj[int(u_v[0])].append((int(u_v[1]), fun))
-
-        self.mode_state = info['mode'][0]['id']
-        self.var_list = var_list
-        self.mode_list = mode_list
-        self.adj = adj
+        return cls(mode_list, adj)
 
     def next(self, dT: float):
         res = self.mode_list[self.mode_state].next(dT)
@@ -74,7 +84,7 @@ class HybridAutomata:
 if __name__ == "__main__":
     with open('../automata/test.json', 'r') as f:
         data = json.load(f)
-        sys = HybridAutomata(data['automation'])
+        sys = HybridAutomata.from_json(data['automation'])
         res = []
         for i in range(1000):
             res.append(sys.next(0.01)[0])

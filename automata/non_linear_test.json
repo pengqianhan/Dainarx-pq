@@ -63,5 +63,12 @@
       "mode": 2,
       "x": [54]
     }
-  ]
+  ],
+  "fit_config": {
+    "dt": 0.01,
+    "total_time": 10.0,
+    "dim": 3,
+    "need_bias": false,
+    "other_items": ""
+  }
 }

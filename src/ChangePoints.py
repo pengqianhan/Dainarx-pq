@@ -1,38 +1,38 @@
 import numpy as np
-import re
-
-
-def analyticalExpression(expr_list: str):
-    if expr_list == '':
-        return []
-    expr_list = expr_list.split(',')
-    fun_list = [eval("lambda x: " + expr) for expr in expr_list]
-    return fun_list
+from src.DE import DE
 
 
 class FeatureExtractor:
     def __init__(self, dim: int, need_bias=False, other_items=""):
         self.dim = dim
         self.need_bias = need_bias
-        self.fun_list = analyticalExpression(other_items)
+        self.fun_list = DE.analyticalExpression(other_items)
 
-    def __call__(self, data: np.array):
-        A = []
+    def __call__(self, data):
+        matrix_a = []
         b = []
+        if type(data) == list or len(data.shape) > 1:
+            for cur in data:
+                self.append_data(matrix_a, b, cur)
+        else:
+            self.append_data(matrix_a, b, data)
+        return np.linalg.lstsq(matrix_a, b, rcond=None)[0]
+
+    def append_data(self, matrix_a, b, data: np.array):
         for i in range(len(data) - self.dim):
             this_line = []
             for j in range(self.dim):
                 this_line.append(data[i + j])
             this_line = list(reversed(this_line))
+            for fun in self.fun_list:
+                if i == 0:
+                    this_line.append(fun(data[(i + self.dim)::-1]))
+                else:
+                    this_line.append(fun(data[(i + self.dim):(i - 1):-1]))
             if self.need_bias:
                 this_line.append(1.)
-            for fun in self.fun_list:
-                this_line.append(fun(data[(i + self.dim)::-1]))
-            A.append(this_line)
+            matrix_a.append(this_line)
             b.append(data[i + self.dim])
-        return np.linalg.lstsq(A, b, rcond=None)[0]
-
-
 
 
 def getFeature(data: np.array, dim: int, need_bias=False) -> np.array:

@@ -27,7 +27,5 @@ def guard_learning(data: list[Slice]):
         label = np.concatenate((np.zeros(negative_sample[u].shape[0]), np.ones(len(positive_sample[(u, v)]))))
         sample = np.concatenate((negative_sample[u], positive_sample[(u, v)]))
         svc.fit(sample, label)
-        if adj.get(u) is None:
-            adj[u] = []
-        adj[u].append((v, svc))
+        adj[(u, v)] = svc
     return adj

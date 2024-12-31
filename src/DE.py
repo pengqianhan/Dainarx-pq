@@ -8,15 +8,14 @@ import matplotlib.pyplot as plt
 import re
 
 
-def analyticalExpression(expr, val_name):
-    general = re.sub(val_name, 'x', expr)
-    prefix = re.sub("=(.)*", "", general)
-    suffix = re.sub("(.)*=", "", general)
-    dim = int(re.findall(r'\d+', prefix)[0])
-    return dim, suffix
-
-
 class ODE:
+    @staticmethod
+    def analyticalExpression(expr, val_name):
+        general = re.sub(val_name, 'x', expr)
+        prefix = re.sub("=(.)*", "", general)
+        suffix = re.sub("(.)*=", "", general)
+        dim = int(re.findall(r'\d+', prefix)[0])
+        return dim, suffix
 
     def __init__(self, eq: str, init_state=None, var_name='x', method='e'):
         r"""
@@ -38,7 +37,7 @@ class ODE:
             init_state = []
 
         try:
-            dim, expr = analyticalExpression(eq, var_name)
+            dim, expr = ODE.analyticalExpression(eq, var_name)
             self.dim = dim
             self.eq = eval("lambda x: " + expr)
             self.state = np.array(init_state).astype(np.float64)
@@ -85,14 +84,28 @@ class ODE:
 
 
 class DE:
-    def __init__(self, eq, init_state, bias: int = 0, *other_fun):
+    @staticmethod
+    def analyticalExpression(expr_list: str):
+        if expr_list == '':
+            return []
+        expr_list = expr_list.split(',')
+        fun_list = []
+        for expr in expr_list:
+            if expr.isspace():
+                continue
+            fun_list.append(eval("lambda x: " + expr))
+        return fun_list
+
+    def __init__(self, eq, init_state, has_bias=False, other_item: str = ''):
+        # if type(init_state) == np.array:
+        #     init_state = init_state.tolist()
         self.init_state = init_state
         self.state = deque(init_state)
         self.eq = eq.copy()
-        self.dim = len(eq) - len(other_fun)
-        self.bias = bias
+        self.fun_list = DE.analyticalExpression(other_item)
+        self.dim = len(eq) - len(self.fun_list) - int(has_bias)
+        self.has_bias = has_bias
         self.fit_state_size()
-        self.other_fun = other_fun
 
     def fit_state_size(self):
         while len(self.state) > self.dim:
@@ -100,21 +113,26 @@ class DE:
         while len(self.state) < self.dim:
             self.state.append(0)
 
-    def next(self):
-        val = self.bias
+    def next(self, *args):
+        val = 0
         for i in range(self.dim):
             val += self.state[i] * self.eq[i]
-        fun_idx = 0
-        for fun in self.other_fun:
+        self.state.appendleft(0)
+        for fun_idx in range(len(self.fun_list)):
             k = self.eq[fun_idx + self.dim]
-            val += fun(self.state) * k
+            val += self.fun_list[fun_idx](self.state) * k
             fun_idx += 1
-        self.state.appendleft(val)
+        if self.has_bias:
+            val += self.eq[-1]
+        self.state[0] = val
         self.state.pop()
         return val
 
-    def clear(self):
-        self.state = self.init_state
+    def clear(self, init_state=None):
+        if init_state is None:
+            self.state = deque(self.init_state.copy())
+        else:
+            self.state = deque(init_state)
         self.fit_state_size()
 
     def load(self, other_ed):
@@ -130,7 +148,7 @@ if __name__ == "__main__":
     start = time.time()
     for pos in range(500):
         X.append(pos)
-        Y.append(ode.next(0.01))
+        Y.append(ode.next())
     print(time.time() - start)
     print(Y[:10])
     plt.plot(X, Y)

@@ -1,4 +1,38 @@
 import numpy as np
+import re
+
+
+def analyticalExpression(expr_list: str):
+    if expr_list == '':
+        return []
+    expr_list = expr_list.split(',')
+    fun_list = [eval("lambda x: " + expr) for expr in expr_list]
+    return fun_list
+
+
+class FeatureExtractor:
+    def __init__(self, dim: int, need_bias=False, other_items=""):
+        self.dim = dim
+        self.need_bias = need_bias
+        self.fun_list = analyticalExpression(other_items)
+
+    def __call__(self, data: np.array):
+        A = []
+        b = []
+        for i in range(len(data) - self.dim):
+            this_line = []
+            for j in range(self.dim):
+                this_line.append(data[i + j])
+            this_line = list(reversed(this_line))
+            if self.need_bias:
+                this_line.append(1.)
+            for fun in self.fun_list:
+                this_line.append(fun(data[(i + self.dim)::-1]))
+            A.append(this_line)
+            b.append(data[i + self.dim])
+        return np.linalg.lstsq(A, b, rcond=None)[0]
+
+
 
 
 def getFeature(data: np.array, dim: int, need_bias=False) -> np.array:
@@ -51,7 +85,7 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
                 err = np.mean(np.abs(res - last))
                 error_data.append(err)
                 if abs(err) > th and tail_len == 0:
-                    change_points.append(pos + w - 1)
+                    change_points.append(pos + w - 2)
                     tail_len = w
                 tail_len = max(tail_len - 1, 0)
             last = res
@@ -60,6 +94,6 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
 
     res = mergeChangePoints(change_points, merge_th)
     res.append(data_list.shape[1])
-    res.insert(0, 1)
+    res.insert(0, 0)
 
     return res, np.array(error_datas)

@@ -52,8 +52,9 @@
   "fit_config": {
     "dt": 0.01,
     "total_time": 21.0,
-    "dim": 3,
+    "dim": 1,
     "need_bias": true,
-    "other_items": ""
+    "other_items": "",
+    "kernel": "linear"
   }
 }

@@ -49,7 +49,7 @@ def run(data_list, get_feature):
     adj = guard_learning(slice_data)
     sys = build_system(slice_data, adj, get_feature)
     model_now = adj[(1, 2)]
-    print(model_now.coef_, model_now.intercept_)
+    # print(model_now.coef_, model_now.intercept_)
     return sys
 
 
@@ -59,7 +59,8 @@ def get_config(json_path):
         json_path = os.path.join(current_dir, json_path)
     config = {}
     if json_path.isspace():
-        config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'need_bias': False, 'other_items': ''}
+        config = {'dt': 0.01, 'total_time': 10, 'dim': 3,
+                  'need_bias': False, 'other_items': '', 'kernel': 'linear'}
     else:
         with open(json_path) as f:
             json_file = json.load(f).get('fit_config', {})
@@ -68,6 +69,7 @@ def get_config(json_path):
         config['dim'] = json_file.get('dim', 3)
         config['need_bias'] = json_file.get('need_bias', False)
         config['other_items'] = json_file.get('other_items', '')
+        config['kernel'] = json_file.get('kernel', 'linear')
     return config
 
 

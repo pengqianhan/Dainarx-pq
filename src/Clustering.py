@@ -184,7 +184,7 @@ def compute_feature_distance(feature_list):
         min_val = np.min(current_row)
         max_val = np.max(current_row)
         if max_val - min_val < 1e-6:
-            current_row = current_row / current_row
+            current_row = 1.
         else:
             current_row = (current_row - min_val) / (max_val - min_val)
 

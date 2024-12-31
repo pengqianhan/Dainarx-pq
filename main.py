@@ -21,8 +21,7 @@ def get_ture_chp(data):
 
 
 def run(trace, num_var, num_ud):
-
-    #chp detection
+    # chp detection
     x_lists = []
     ud_lists = []
 
@@ -32,6 +31,8 @@ def run(trace, num_var, num_ud):
         trace[i]['chpoints_per_var'] = chp_per_var
         x_lists.append(trace[i]['x'])
         ud_lists.append(trace[i]['ud'])
+        print("GT: ", get_ture_chp(trace[i]['mode']))
+        print(chpoints)
 
         # trace[i]['chpoints'] = trace[i]['true_chp']
         # trace[i]['chpoints_per_var'][0] = trace[i]['true_chp']
@@ -42,35 +43,32 @@ def run(trace, num_var, num_ud):
     if num_ud:
         ud = np.hstack(ud_lists)
 
-    #clustering
+    # clustering
     trace = clustering_learning(trace, x, ud, num_var, num_ud)
 
-
     # guard learning
-    models = guard_learning(trace)
+    models = guard_learning(trace, 'linear')
 
-
-    #ODE Learning
-    #ode = ODELearning(trace, x, ud)
+    # ODE Learning
+    # ode = ODELearning(trace, x, ud)
 
     # svm test
     model_now = models['1'][0]
-    x_test = np.array([[7.45983, 12.43306] ])
+    x_test = np.array([[7.45983, 12.43306]])
     print(model_now.predict(x_test))
-    # print(model_now.coef_, model_now.intercept_)
+    print(model_now.coef_, model_now.intercept_)
     # print(model_now.intercept_ / model_now.coef_[0])
 
-    #以下代码只用来画图
-        # plot_idx = 1
-        # err = err_data[plot_idx] / np.max(err_data[plot_idx]) * np.max(trace[i]['x'][plot_idx])
-        # plt.plot(np.arange(0, len(trace[i]['x'][plot_idx])), trace[i]['x'][plot_idx])
-        # plt.plot(np.arange(0, len(err)), err)
-        # plt.show()
+    # 以下代码只用来画图
+    # plot_idx = 1
+    # err = err_data[plot_idx] / np.max(err_data[plot_idx]) * np.max(trace[i]['x'][plot_idx])
+    # plt.plot(np.arange(0, len(trace[i]['x'][plot_idx])), trace[i]['x'][plot_idx])
+    # plt.plot(np.arange(0, len(err)), err)
+    # plt.show()
     print('done')
 
 
 def main(num_var, num_ud):
-
     current_dir = os.path.dirname(os.path.abspath(__file__))
     for root, dirs, files in os.walk(os.path.join(current_dir, "data")):
 
@@ -95,7 +93,6 @@ def main(num_var, num_ud):
             trace.append(trace_temp)
 
         run(trace, num_var, num_ud)
-
 
 
 if __name__ == "__main__":

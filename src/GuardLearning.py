@@ -7,8 +7,7 @@ def guard_learning(trace, svm_kernel = 'poly'):
     mode_transition_metric = np.eye(mode_num)
     for i in range(len(trace)):
         begin = trace[i]['labels_trace'][0]
-        for j in trace[i]['labels_trace']:
-            end = trace[i]['labels_trace'][j]
+        for end in trace[i]['labels_trace']:
             if mode_transition_metric[begin - 1, end - 1] != 1:
                 mode_transition_metric[begin - 1, end - 1] = 1
             begin = end

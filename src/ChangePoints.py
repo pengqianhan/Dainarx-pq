@@ -1,9 +1,13 @@
 import numpy as np
 import itertools
 
+
 def getFeature(data: np.array, dim: int, need_bias=False) -> np.array:
     A = []
     b = []
+    if len(data) < dim + 1:
+        print("ERROR")
+
     for i in range(len(data) - dim):
         this_line = []
         for j in range(dim):

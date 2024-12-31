@@ -1,5 +1,5 @@
 import numpy as np
-from src.ChangePoints import FindChangePoint
+from src.ChangePoings import FindChangePoint
 from src.Clustering import clustering_learning
 from src.GuardLearning import guard_learning
 from src.ODELearning import ODELearning
@@ -16,7 +16,7 @@ def get_ture_chp(data):
             change_points.append(idx + 1)
         idx += 1
         last = now
-    change_points.append(1001)
+    change_points.append(len(data))
     return change_points
 
 
@@ -26,9 +26,8 @@ def run(trace, num_var, num_ud):
     ud_lists = []
 
     for i in range(len(trace)):
-        chp_per_var, chpoints, err_data = FindChangePoint(trace[i]['x'], num_var)
+        chpoints, err_data = FindChangePoint(trace[i]['x'], num_var)
         trace[i]['chpoints'] = chpoints
-        trace[i]['chpoints_per_var'] = chp_per_var
         x_lists.append(trace[i]['x'])
         ud_lists.append(trace[i]['ud'])
         print("GT: ", get_ture_chp(trace[i]['mode']))

@@ -1,6 +1,6 @@
 from pyexpat import features
 
-from src.ChangePoints import getFeature
+from src.ChangePoings import getFeature
 import numpy as np
 
 def clustering_learning(trace, x, ud, num_var, num_ud):
@@ -93,7 +93,7 @@ def compute_clusters_global(xs, ud, trace, cluster_segs, seg_index, seg_index_va
 
     for t in trace:
         for k in range(num_var + num_ud):
-            chpoints_var = np.array(t['chpoints_per_var'][k])  # 当前变量的切片信息
+            chpoints_var = np.array(t['chpoints'])  # 当前变量的切片信息
             len_segs = len(chpoints_var) - 1  # 计算切片数量
             t['labels_trace_per_var'][k] = cluster_global[begin:len_segs+begin]  # 更新聚类标签
             begin = len_segs+begin
@@ -139,7 +139,7 @@ def compute_clusters_local(trace, combined_metric, seg_index_var, num_var, num_u
         # 更新 trace 数据结构中的聚类信息
         len_begin = 0
         for t in trace:
-            chpoints_var = np.array(t['chpoints_per_var'][k])  # 当前变量的切片信息
+            chpoints_var = np.array(t['chpoints'])  # 当前变量的切片信息
             len_segs = len(chpoints_var) - 1  # 计算切片数量
             t['labels_trace_per_var'][k] = already_clustered[len_begin:len_begin + len_segs]
             len_begin += len_segs
@@ -222,9 +222,9 @@ def compute_segments(trace, num_var, num_ud):
         seg_index = np.vstack((seg_index, seg_index[-1, 1] + chsegments))
 
         # Local segments (per output variable)
-        chp_var = trace[i]['chpoints_per_var']
+        chp_var = trace[i]['chpoints']
         for j in range(num_var + num_ud):
-            chp_curr = np.array(chp_var[j])
+            chp_curr = np.array(chp_var)
             chsegments_var = np.column_stack((chp_curr[:-1], chp_curr[1:]))
             chsegments_var[1:, 0] += 1  # Increase start by 1 as done above
             # Apply offsets for consistency with x (and ud)

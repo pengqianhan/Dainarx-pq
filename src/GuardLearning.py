@@ -1,7 +1,8 @@
 from sklearn.svm import SVC
 import numpy as np
 
-def guard_learning(trace, svm_kernel = 'poly'):
+
+def guard_learning(trace, svm_kernel='linear'):
     mode_num = len(trace[0]['labels_num'])
 
     mode_transition_metric = np.eye(mode_num)
@@ -32,7 +33,7 @@ def guard_learning(trace, svm_kernel = 'poly'):
         for j in range(len(trace[i]['labels_trace'])):
             mode_now = trace[i]['labels_trace'][j]
 
-            x_now = trace[i]['x'][:,trace[i]['chpoints'][j] - 1:trace[i]['chpoints'][j + 1] - 1].T
+            x_now = trace[i]['x'][:, trace[i]['chpoints'][j] - 1:trace[i]['chpoints'][j + 1] - 1].T
             label_now = np.zeros((x_now.shape[0], 1))
 
             for k in range(len(mode_transition_list[mode_now - 1])):
@@ -44,12 +45,13 @@ def guard_learning(trace, svm_kernel = 'poly'):
             if j + 1 != len((trace[i]['labels_trace'])):
                 mode_next = trace[i]['labels_trace'][j + 1]
                 train_data[str(mode_now)][mode_transition_list[mode_now - 1].index(mode_next)][0].append(x_chp)
-                train_data[str(mode_now)][mode_transition_list[mode_now - 1].index(mode_next)][1].append(np.ones((1,1)))
+                train_data[str(mode_now)][mode_transition_list[mode_now - 1].index(mode_next)][1].append(
+                    np.ones((1, 1)))
 
             else:
                 for k in range(len(mode_transition_list[mode_now - 1])):
                     train_data[str(mode_now)][k][0].append(x_chp)
-                    train_data[str(mode_now)][k][1].append(np.zeros((1,1)))
+                    train_data[str(mode_now)][k][1].append(np.zeros((1, 1)))
 
     for mm in range(mode_num):
         for nn in range(len(train_data[str(mm + 1)])):
@@ -58,14 +60,11 @@ def guard_learning(trace, svm_kernel = 'poly'):
 
     for mm in range(mode_num):
         for nn in range(len(mode_transition_list[mm])):
-            svm_model = SVC(kernel = svm_kernel, class_weight={0: 1, 1: 1})
+            svm_model = SVC(kernel=svm_kernel, class_weight={0: 1, 1: 1})
             svm_model.fit(train_data[str(mm + 1)][nn][0], train_data[str(mm + 1)][nn][1])
             models[str(mm + 1)].append(svm_model)
 
-
-
     import matplotlib.pyplot as plt
-
 
     X = np.array(train_data['1'][0][0])
     xx, yy = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 500),
@@ -73,7 +72,7 @@ def guard_learning(trace, svm_kernel = 'poly'):
     X_train = X
     y_train = train_data['1'][0][1]
     # 计算每个点的决策函数值
-    svc =  models['1'][0]
+    svc = models['1'][0]
     Z = svc.decision_function(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
 
@@ -87,7 +86,6 @@ def guard_learning(trace, svm_kernel = 'poly'):
     # 绘制训练数据
     plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap='autumn', marker='o', edgecolors='k',
                 label='Training Data')
-
 
     plt.title('SVM Decision Boundary with Polynomial Kernel')
     plt.legend()

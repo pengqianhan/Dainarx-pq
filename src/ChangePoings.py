@@ -51,11 +51,15 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
                 err = np.mean(np.abs(res - last))
                 error_data.append(err)
                 if abs(err) > th and tail_len == 0:
-                    change_points.append(pos + w - 2)
+                    change_points.append(pos + w - 1)
                     tail_len = w
                 tail_len = max(tail_len - 1, 0)
             last = res
             pos += 1
         error_datas.append(error_data)
 
-    return mergeChangePoints(change_points, merge_th), np.array(error_datas)
+    res = mergeChangePoints(change_points, merge_th)
+    res.append(data_list.shape[1])
+    res.insert(0, 1)
+
+    return res, np.array(error_datas)

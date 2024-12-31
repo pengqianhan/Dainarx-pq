@@ -25,7 +25,9 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
         data = json.load(f)
         sys = HybridAutomata(data['automation'])
         state_id = 0
+        cnt = 0
         for init_state in data['init_state']:
+            cnt += 1
             state_data = []
             mode_data = []
             now = 0.
@@ -42,4 +44,4 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
 
 
 if __name__ == "__main__":
-    creat_data('automata/test.json', 'data', 0.01, 10)
+    creat_data('automata/1.json', 'data', 0.01, 10)

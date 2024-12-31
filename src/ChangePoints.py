@@ -61,8 +61,9 @@ def mergeChangePoints(data, th: float):
     return res
 
 
-def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 0.1, merge_th=10):
+def FindChangePoint(data_list: np.array, get_feature, w: int = 10, th: float = 0.1, merge_th=10):
     r"""
+    :param get_feature:
     :param data_list: (N, M) Sample points for N variables.
     :param dim: Fit the dimension of the difference equation, which defaults to 3.
     :param w: Slide window size, default is 10.
@@ -80,7 +81,7 @@ def FindChangePoint(data_list: np.array, dim: int = 3, w: int = 10, th: float = 
         error_data = []
 
         while pos + w < len(data):
-            res = getFeature(data[pos:(pos + w)], dim, need_bias=True)
+            res = get_feature(data[pos:(pos + w)])
             if last is not None:
                 err = np.mean(np.abs(res - last))
                 error_data.append(err)

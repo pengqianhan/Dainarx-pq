@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from CreatData import creat_data
 
 from src.CurveSlice import Slice
-from src.ChangePoints import FindChangePoint, getFeature, FeatureExtractor
+from src.ChangePoints import FindChangePoint, FeatureExtractor
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
@@ -42,7 +42,7 @@ def run(data_list, get_feature):
     slice_data = []
 
     for data in data_list:
-        change_points, err_data = FindChangePoint(data)
+        change_points, err_data = FindChangePoint(data, get_feature)
         print(change_points)
         cut_segment(slice_data, data, change_points, get_feature)
     clustering(slice_data)
@@ -51,6 +51,7 @@ def run(data_list, get_feature):
     model_now = adj[(1, 2)]
     print(model_now.coef_, model_now.intercept_)
     return sys
+
 
 def get_config(json_path):
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +80,6 @@ def main(json_path: str, need_creat=False):
     if need_creat:
         print("Data being generated!")
         creat_data(json_path, 'data', config['dt'], config['total_time'])
-
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data = []
@@ -117,6 +117,7 @@ def main(json_path: str, need_creat=False):
         plt.plot(np.arange(len(data[var_idx])), data[var_idx], color='c')
         plt.plot(np.arange(fit_data.shape[0]), fit_data[:, var_idx], color='r')
         plt.show()
+
 
 if __name__ == "__main__":
     main("./automata/1.json")

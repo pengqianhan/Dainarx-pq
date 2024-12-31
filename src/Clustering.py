@@ -1,8 +1,4 @@
-from pyexpat import features
-
-from src.ChangePoints import getFeature
 from src.CurveSlice import Slice
-import numpy as np
 
 
 def clustering(data: list[Slice]):

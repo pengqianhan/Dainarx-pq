@@ -24,9 +24,9 @@ class Slice:
         idx = 0
         for v1, v2 in zip(feature1, feature2):
             relative_dis, dis = Slice.get_dis(v1, v2)
-            Slice.RelativeErrorThreshold[idx] =\
+            Slice.RelativeErrorThreshold[idx] = \
                 min(Slice.RelativeErrorThreshold[idx], relative_dis * Slice.ToleranceRatio)
-            Slice.AbsoluteErrorThreshold[idx] =\
+            Slice.AbsoluteErrorThreshold[idx] = \
                 min(Slice.AbsoluteErrorThreshold[idx], dis * Slice.ToleranceRatio)
             idx += 1
         return True
@@ -37,7 +37,6 @@ class Slice:
             if data[i].isFront:
                 continue
             Slice.fit_threshold_one(data[i].feature, data[i - 1].feature)
-
 
     def __init__(self, data, get_feature, isFront):
         self.data = data
@@ -55,7 +54,7 @@ class Slice:
         for v1, v2 in zip(self.feature, other.feature):
             relative_dis, dis = Slice.get_dis(v1, v2)
             if relative_dis > Slice.RelativeErrorThreshold[idx] and \
-                    dis > Slice.AbsoluteErrorThreshold[idx] :
+                    dis > Slice.AbsoluteErrorThreshold[idx]:
                 return False
             idx += 1
         return True

@@ -14,19 +14,11 @@ class ModelFun:
         return self.model.predict([[*args]])[0] > 0.5
 
 
-def check(model, *x):
-    print(*x)
-    print([[*x]])
-    print(model.predict([[*x]]))
-    print(model.predict([[*x]])[0])
-    print(model.predict([[*x]])[0] > 0.5)
-
-
 def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, other_items=""):
     data_of_mode = {}
     for cur in data:
         if data_of_mode.get(cur.mode) is None:
-            data_of_mode[cur.mode] = [[] for i in range(len(cur.data))]
+            data_of_mode[cur.mode] = [[] for _ in range(len(cur.data))]
         for i in range(len(cur.data)):
             data_of_mode[cur.mode][i].append(cur.data[i])
     mode_list = {}

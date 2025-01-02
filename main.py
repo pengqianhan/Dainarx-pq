@@ -7,7 +7,7 @@ from CreatData import creat_data
 from src.utils import *
 
 from src.CurveSlice import Slice, slice_curve
-from src.ChangePoints import FindChangePoint, FeatureExtractor
+from src.ChangePoints import FeatureExtractor, find_change_point
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
@@ -18,7 +18,7 @@ import re
 def run(data_list, get_feature, config):
     slice_data = []
     for data in data_list:
-        change_points, err_data = FindChangePoint(data, get_feature)
+        change_points, err_data = find_change_point(data, get_feature)
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)

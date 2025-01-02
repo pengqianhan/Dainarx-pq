@@ -1,6 +1,7 @@
 from src.CurveSlice import Slice
 import matplotlib.pyplot as plt
 
+
 def get_ture_chp(data):
     last = None
     change_points = [0]

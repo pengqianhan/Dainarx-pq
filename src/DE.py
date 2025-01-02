@@ -147,7 +147,7 @@ if __name__ == "__main__":
     start = time.time()
     for pos in range(500):
         X.append(pos)
-        Y.append(ode.next())
+        Y.append(ode.next(0.01))
     print(time.time() - start)
     print(Y[:10])
     plt.plot(X, Y)

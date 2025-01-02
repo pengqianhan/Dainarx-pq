@@ -64,7 +64,7 @@
       "x": [54]
     }
   ],
-  "fit_config": {
+  "config": {
     "dt": 0.001,
     "total_time": 5.0,
     "dim": 3,

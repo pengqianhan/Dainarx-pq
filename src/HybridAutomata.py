@@ -26,10 +26,10 @@ class Node:
                 raise Exception("There is no matching equation for variable {}.".format(var))
         return cls(var_list, ode_list)
 
-    def next(self, dT: float):
+    def next(self, *args):
         res = []
         for ode in self.ode_list:
-            res.append(ode.next(dT))
+            res.append(ode.next(*args))
         return res
 
     def load(self, other_node):
@@ -66,8 +66,8 @@ class HybridAutomata:
             adj[int(u_v[0])].append((int(u_v[1]), fun))
         return cls(mode_list, adj)
 
-    def next(self, dT: float):
-        res = self.mode_list[self.mode_state].next(dT)
+    def next(self, *args):
+        res = self.mode_list[self.mode_state].next(*args)
         for to, fun in self.adj[self.mode_state]:
             if fun(*res):
                 self.mode_list[to].load(self.mode_list[self.mode_state])

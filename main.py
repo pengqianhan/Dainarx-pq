@@ -1,4 +1,6 @@
 import json
+import os
+import re
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,8 +13,6 @@ from src.ChangePoints import FeatureExtractor, find_change_point
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
-import os
-import re
 
 
 def run(data_list, get_feature, config):
@@ -38,25 +38,30 @@ def get_config(json_path):
                   'need_bias': False, 'other_items': '', 'kernel': 'linear'}
     else:
         with open(json_path) as f:
-            json_file = json.load(f).get('fit_config', {})
-        config['dt'] = json_file.get('dt', 0.01)
-        config['total_time'] = json_file.get('total_time', 10)
-        config['dim'] = json_file.get('dim', 3)
-        config['need_bias'] = json_file.get('need_bias', False)
-        config['other_items'] = json_file.get('other_items', '')
-        config['kernel'] = json_file.get('kernel', 'linear')
-    return config
+            json_file = json.load(f)
+        config = json_file.get('config', {})
+        config.setdefault('dt', 0.01)
+        config.setdefault('total_time', 10)
+        config.setdefault('dim', 3)
+        config.setdefault('need_bias', False)
+        config.setdefault('other_items', '')
+        config.setdefault('kernel', 'linear')
+        f.close()
+    return config, get_hash_code(json_file, config)
 
 
-def main(json_path: str, data_path='data', need_creat=False):
-    config = get_config(json_path)
+def main(json_path: str, data_path='data', need_creat=None):
+    config, hash_code = get_config(json_path)
     print('config: ')
     for key, value in config.items():
         print(f'\t{key}: {value}')
 
+    if need_creat is None:
+        need_creat = check_data_update(hash_code, data_path)
     if need_creat:
         print("Data being generated!")
         creat_data(json_path, data_path, config['dt'], config['total_time'])
+        save_hash_code(hash_code, data_path)
 
     mode_list = []
     data = []
@@ -89,7 +94,7 @@ def main(json_path: str, data_path='data', need_creat=False):
     mode_data = []
     sys.reset(init_state)
     for i in range(data.shape[1] - config['dim']):
-        state, mode = sys.next(config['dt'])
+        state, mode = sys.next()
         fit_data.append(state)
         mode_data.append(mode)
     fit_data = np.array(fit_data)
@@ -101,4 +106,4 @@ def main(json_path: str, data_path='data', need_creat=False):
 
 
 if __name__ == "__main__":
-    main("./automata/1.json", 'data', need_creat=True)
+    main("./automata/1.json")

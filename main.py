@@ -37,17 +37,21 @@ def cut_segment(cut_data, data, change_points, get_feature):
     return cut_data
 
 
-def run(data_list, get_feature):
+def run(data_list, get_feature, config):
     # chp detection
     slice_data = []
 
+    detect_fun = FeatureExtractor(config['dim'], config['need_bias'])
+    detect_fun = get_feature
+
     for data in data_list:
-        change_points, err_data = FindChangePoint(data, get_feature)
+        change_points, err_data = FindChangePoint(data, detect_fun)
         print(change_points)
-        cut_segment(slice_data, data, change_points, get_feature)
+        cut_segment(slice_data, data, change_points, detect_fun)
+    Slice.fit_threshold(slice_data)
     clustering(slice_data)
     adj = guard_learning(slice_data)
-    sys = build_system(slice_data, adj, get_feature)
+    sys = build_system(slice_data, adj, get_feature, config['need_bias'], config['other_items'])
     model_now = adj[(1, 2)]
     # print(model_now.coef_, model_now.intercept_)
     return sys
@@ -93,12 +97,13 @@ def main(json_path: str, need_creat=False):
                 continue
             npz_file = np.load(os.path.join(root, file))
             state_data_temp, mode_data_temp = npz_file['arr_0'], npz_file['arr_1']
+            print("GT: ", get_ture_chp(mode_data_temp))
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
 
     print("Be running!")
     get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
-    sys = run(data, get_feature)
+    sys = run(data, get_feature, config)
 
     print("Start simulation")
     fit_idx = 1
@@ -122,4 +127,4 @@ def main(json_path: str, need_creat=False):
 
 
 if __name__ == "__main__":
-    main("./automata/1.json", need_creat=False)
+    main("./automata/1.json", need_creat=True)

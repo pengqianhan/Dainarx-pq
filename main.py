@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from CreatData import creat_data
+from src.utils import *
 
-from src.CurveSlice import Slice
+from src.CurveSlice import Slice, slice_curve
 from src.ChangePoints import FindChangePoint, FeatureExtractor
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
@@ -14,46 +15,16 @@ import os
 import re
 
 
-def get_ture_chp(data):
-    last = None
-    change_points = [0]
-    idx = 0
-    for now in data:
-        if last is not None and last != now:
-            change_points.append(idx)
-        idx += 1
-        last = now
-    change_points.append(len(data))
-    return change_points
-
-
-def cut_segment(cut_data, data, change_points, get_feature):
-    last = 0
-    for point in change_points:
-        if point == 0:
-            continue
-        cut_data.append(Slice(data[:, last:point], get_feature, last == 0))
-        last = point
-    return cut_data
-
-
 def run(data_list, get_feature, config):
-    # chp detection
     slice_data = []
-
-    detect_fun = FeatureExtractor(config['dim'], config['need_bias'])
-    detect_fun = get_feature
-
     for data in data_list:
-        change_points, err_data = FindChangePoint(data, detect_fun)
+        change_points, err_data = FindChangePoint(data, get_feature)
         print(change_points)
-        cut_segment(slice_data, data, change_points, detect_fun)
+        slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)
     clustering(slice_data)
-    adj = guard_learning(slice_data)
+    adj = guard_learning(slice_data, config['kernel'])
     sys = build_system(slice_data, adj, get_feature, config['need_bias'], config['other_items'])
-    model_now = adj[(1, 2)]
-    # print(model_now.coef_, model_now.intercept_)
     return sys
 
 
@@ -77,7 +48,7 @@ def get_config(json_path):
     return config
 
 
-def main(json_path: str, need_creat=False):
+def main(json_path: str, data_path='data', need_creat=False):
     config = get_config(json_path)
     print('config: ')
     for key, value in config.items():
@@ -85,12 +56,15 @@ def main(json_path: str, need_creat=False):
 
     if need_creat:
         print("Data being generated!")
-        creat_data(json_path, 'data', config['dt'], config['total_time'])
+        creat_data(json_path, data_path, config['dt'], config['total_time'])
+
+    mode_list = []
+    data = []
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    data = []
-    mode_list = []
-    for root, dirs, files in os.walk(os.path.join(current_dir, "data")):
+    if not os.path.isabs(data_path):
+        data_path = os.path.join(current_dir, data_path)
+    for root, dirs, files in os.walk(data_path):
         print("Loading data!")
         for file in sorted(files):
             if re.search(r"(.)*\.npz", file) is None:
@@ -127,4 +101,4 @@ def main(json_path: str, need_creat=False):
 
 
 if __name__ == "__main__":
-    main("./automata/1.json", need_creat=True)
+    main("./automata/1.json", 'data', need_creat=True)

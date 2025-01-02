@@ -59,3 +59,13 @@ class Slice:
                 return False
             idx += 1
         return True
+
+
+def slice_curve(cut_data, data, change_points, get_feature):
+    last = 0
+    for point in change_points:
+        if point == 0:
+            continue
+        cut_data.append(Slice(data[:, last:point], get_feature, last == 0))
+        last = point
+    return cut_data

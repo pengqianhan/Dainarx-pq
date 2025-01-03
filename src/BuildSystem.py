@@ -38,7 +38,8 @@ def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, 
 
 
 def get_init_state(data, mode_list, bias):
+    # TODO: match correct mode
     init_state = {'mode': mode_list[bias - 1]}
     for i in range(data.shape[0]):
-        init_state['x' + str(i)] = data[i, :bias]
+        init_state['x' + str(i)] = data[i, (bias - 1)::-1]
     return init_state

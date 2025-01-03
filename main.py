@@ -15,7 +15,8 @@ from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
 
 
-def run(data_list, get_feature, config):
+def run(data_list, config):
+    get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
     slice_data = []
     for data in data_list:
         change_points, err_data = find_change_point(data, get_feature)
@@ -32,7 +33,6 @@ def get_config(json_path):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
-    config = {}
     if json_path.isspace():
         config = {'dt': 0.01, 'total_time': 10, 'dim': 3,
                   'need_bias': False, 'other_items': '', 'kernel': 'linear'}
@@ -81,11 +81,10 @@ def main(json_path: str, data_path='data', need_creat=None):
             mode_list.append(mode_data_temp)
 
     print("Be running!")
-    get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
-    sys = run(data, get_feature, config)
+    sys = run(data, config)
 
     print("Start simulation")
-    fit_idx = 1
+    fit_idx = 0
     data = data[fit_idx]
     mode_list = mode_list[fit_idx]
 

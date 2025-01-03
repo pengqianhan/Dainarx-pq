@@ -21,8 +21,9 @@ class FeatureExtractor:
     def append_data(self, matrix_a, b, data: np.array):
         for i in range(len(data) - self.dim):
             this_line = list(reversed(data[i:(i + self.dim)]))
+            delay_array = [0] + this_line.copy()
             for fun in self.fun_list:
-                this_line.append(fun(this_line[:self.dim]))
+                this_line.append(fun(delay_array))
             if self.need_bias:
                 this_line.append(1.)
             matrix_a.append(this_line)

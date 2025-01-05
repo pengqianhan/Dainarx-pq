@@ -24,10 +24,12 @@ class Slice:
         idx = 0
         for v1, v2 in zip(feature1, feature2):
             relative_dis, dis = Slice.get_dis(v1, v2)
-            Slice.RelativeErrorThreshold[idx] = \
-                min(Slice.RelativeErrorThreshold[idx], relative_dis * Slice.ToleranceRatio)
-            Slice.AbsoluteErrorThreshold[idx] = \
-                min(Slice.AbsoluteErrorThreshold[idx], dis * Slice.ToleranceRatio)
+            if relative_dis > 1e-4:
+                Slice.RelativeErrorThreshold[idx] = \
+                    min(Slice.RelativeErrorThreshold[idx], relative_dis * Slice.ToleranceRatio)
+            if dis > 1e-4:
+                Slice.AbsoluteErrorThreshold[idx] = \
+                    min(Slice.AbsoluteErrorThreshold[idx], dis * Slice.ToleranceRatio)
             idx += 1
         return True
 
@@ -42,7 +44,7 @@ class Slice:
         self.data = data
         self.feature = []
         for v in self.data:
-            self.feature.append(np.array(get_feature(v)).astype(np.float32))
+            self.feature.append(np.array(get_feature(v)).astype(np.float64))
         self.mode = None
         self.isFront = isFront
 

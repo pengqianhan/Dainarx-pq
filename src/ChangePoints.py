@@ -31,7 +31,7 @@ def find_change_point(data: np.array, get_feature, w: int = 10, th: float = 0.1,
         merge_th = w
 
     while pos + w < data.shape[1]:
-        feature = get_feature(data[:, pos:(pos + w)])
+        feature = get_feature(data[:, pos:(pos + w)])[0]
         if last is not None:
             err = []
             for i in range(len(feature)):

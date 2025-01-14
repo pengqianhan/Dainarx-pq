@@ -22,8 +22,9 @@ class Slice:
         feature1 = data1.feature
         feature2 = data2.feature
         assert len(feature1) == len(feature2)
-        _, err = get_feature([data1.data, data2.data], is_list=True, need_err=True)
-        Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
+        _, err, fit_dim = get_feature([data1.data, data2.data], is_list=True, need_err=True)
+        if fit_dim <= max(data1.fit_dim, data2.fit_dim):
+            Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
             Slice.RelativeErrorThreshold.append(1e-1)
             Slice.AbsoluteErrorThreshold.append(1e-1)
@@ -49,7 +50,7 @@ class Slice:
     def __init__(self, data, get_feature, isFront):
         self.data = data
         self.get_feature = get_feature
-        self.feature = get_feature(data)
+        self.feature, _, self.fit_dim = get_feature(data)
         self.mode = None
         self.isFront = isFront
 
@@ -67,8 +68,8 @@ class Slice:
                 idx += 1
             return True
         else:
-            _, err = self.get_feature([self.data, other.data], is_list=True, need_err=True)
-            return max(err) < Slice.FitErrorThreshold
+            _, err, fit_dim = self.get_feature([self.data, other.data], is_list=True)
+            return fit_dim <= max(self.fit_dim, other.fit_dim) and max(err) < 0.1
 
 
 def slice_curve(cut_data, data, change_points, get_feature):

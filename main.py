@@ -18,8 +18,8 @@ from src.BuildSystem import build_system, get_init_state
 
 
 def run(data_list, config):
-    get_feature = FeatureExtractor(len(data_list[0]), config['dim'],
-                                   config['need_bias'], config['other_items'])
+    get_feature = FeatureExtractor(len(data_list[0]), dim=config['dim'], minus=config['minus'],
+                                   need_bias=config['need_bias'], other_items=config['other_items'])
     slice_data = []
     for data in data_list:
         change_points = find_change_point(data, get_feature, w=config['window_size'])
@@ -39,7 +39,7 @@ def get_config(json_path):
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
     default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
-                      'need_bias': False, 'other_items': '', 'kernel': 'linear'}
+                      'minus': False, 'need_bias': False, 'other_items': '', 'kernel': 'linear'}
     config = {}
     if json_path.isspace() or json_path == '':
         config = default_config

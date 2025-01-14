@@ -21,7 +21,7 @@ def run(data_list, config):
                                    config['need_bias'], config['other_items'])
     slice_data = []
     for data in data_list:
-        change_points = find_change_point(data, get_feature, w=10, merge_th=10)
+        change_points = find_change_point(data, get_feature, w=config['window_size'])
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)
@@ -37,7 +37,7 @@ def get_config(json_path):
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
     if json_path.isspace():
-        config = {'dt': 0.01, 'total_time': 10, 'dim': 3,
+        config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10,
                   'need_bias': False, 'other_items': '', 'kernel': 'linear'}
     else:
         with open(json_path) as f:
@@ -46,6 +46,7 @@ def get_config(json_path):
         config.setdefault('dt', 0.01)
         config.setdefault('total_time', 10)
         config.setdefault('dim', 3)
+        config.setdefault('window_size', 10)
         config.setdefault('need_bias', False)
         config.setdefault('other_items', '')
         config.setdefault('kernel', 'linear')
@@ -115,4 +116,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/buck_converter.json")
+    main("./automata/complex_tank.json")

@@ -55,6 +55,7 @@ python main.py
     "total_time": 10.0, // 采样总时间，默认10
     "dim": 3,           // 差分方程的维度，默认3
     "need_bias": false, // 是否需要常数项
+    "kernel": "linear", // SVM核函数
     "other_items": ""   // 其他的非线性项
     // x[i]表示x[t - i]，即前i项，不要出现大于dim的项
     // 变量名必须为x

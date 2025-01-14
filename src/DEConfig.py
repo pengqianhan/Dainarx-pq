@@ -12,6 +12,9 @@ class FeatureExtractor:
         for expr in expr_list:
             expr = re.sub(r'x\[', 'x[' + str(idx) + '][', expr)
             expr = re.sub(r'x(\d)', r'x[\1]', expr)
+            if 'x_' not in expr:
+                res.append(expr)
+                continue
             for i in range(var_num):
                 if i == idx:
                     continue
@@ -84,7 +87,7 @@ class FeatureExtractor:
             x = np.linalg.lstsq(a, b, rcond=None)[0]
             res.append(x)
             if need_err:
-                err.append(np.sum(np.abs((a @ x) - b)))
+                err.append(max(np.abs((a @ x) - b)))
         res = np.array(res)
         if need_err:
             return res, err

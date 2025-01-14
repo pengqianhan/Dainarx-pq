@@ -5,6 +5,8 @@ class Slice:
     RelativeErrorThreshold = []
     AbsoluteErrorThreshold = []
     ToleranceRatio = 0.5
+    FitErrorThreshold = 1.
+    Method = 'fit'
 
     @staticmethod
     def get_dis(v1, v2):
@@ -16,12 +18,14 @@ class Slice:
         return relative_dis, dis
 
     @staticmethod
-    def fit_threshold_one(feature1, feature2):
+    def fit_threshold_one(get_feature, feature1, feature2):
         assert len(feature1) == len(feature2)
+        _, err = get_feature([feature1, feature2], is_list=True, need_err=True)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
             Slice.RelativeErrorThreshold.append(1e-1)
             Slice.AbsoluteErrorThreshold.append(1e-1)
         idx = 0
+        Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         for v1, v2 in zip(feature1, feature2):
             relative_dis, dis = Slice.get_dis(v1, v2)
             if relative_dis > 1e-4:
@@ -38,7 +42,7 @@ class Slice:
         for i in range(len(data)):
             if data[i].isFront:
                 continue
-            Slice.fit_threshold_one(data[i].feature, data[i - 1].feature)
+            Slice.fit_threshold_one(data[i].get_feature, data[i].feature, data[i - 1].feature)
 
     def __init__(self, data, get_feature, isFront):
         self.data = data
@@ -51,8 +55,18 @@ class Slice:
         self.mode = mode
 
     def __and__(self, other):
-        _, err = self.get_feature([self.data, other.data], is_list=True, need_err=True)
-        return np.sum(err) < 1e-4
+        if Slice.Method == 'dis':
+            idx = 0
+            for v1, v2 in zip(self.feature, other.feature):
+                relative_dis, dis = Slice.get_dis(v1, v2)
+                if relative_dis > Slice.RelativeErrorThreshold[idx] and \
+                        dis > Slice.AbsoluteErrorThreshold[idx]:
+                    return False
+                idx += 1
+            return True
+        else:
+            _, err = self.get_feature([self.data, other.data], is_list=True, need_err=True)
+            return max(err) < Slice.FitErrorThreshold
 
 
 def slice_curve(cut_data, data, change_points, get_feature):

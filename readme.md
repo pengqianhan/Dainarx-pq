@@ -50,14 +50,15 @@ python main.py
       "x2": [3]
     }
   ],
-  "fit_config": {       // 拟合差分方程的参数
-    "dt": 0.01,         // 离散时间，默认0.01
-    "total_time": 10.0, // 采样总时间，默认10
-    "dim": 3,           // 差分方程的维度，默认3
-    "window_size": 10,  // 滑动窗口大小，默认10
-    "need_bias": false, // 是否需要常数项
-    "kernel": "linear", // SVM核函数
-    "other_items": ""   // 差分方程的其他非线性项或交叉项
+  "fit_config": {               // 拟合差分方程的参数
+    "dt": 0.01,                 // 离散时间，默认0.01
+    "total_time": 10.0,         // 采样总时间，默认10
+    "dim": 3,                   // 差分方程的维度，默认3
+    "window_size": 10,          // 滑动窗口大小，默认10
+    "clustering_method": "fit", // 聚类方法，默认fit，有fit和dis两种选项
+    "need_bias": false,         // 是否需要常数项
+    "kernel": "linear",         // SVM核函数
+    "other_items": ""           // 差分方程的其他非线性项或交叉项
     // other_item: 说明
     // 例如 "x0, x2, x3: x[1] * x_[?]; x[?] * x1[2]"
     // 表达式使用分号(;)隔开

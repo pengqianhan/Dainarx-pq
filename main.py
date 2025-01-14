@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,24 +34,27 @@ def run(data_list, config):
 
 
 def get_config(json_path):
+    logging.basicConfig(level=logging.ERROR)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
-    if json_path.isspace():
-        config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10,
-                  'need_bias': False, 'other_items': '', 'kernel': 'linear'}
+    default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
+                      'need_bias': False, 'other_items': '', 'kernel': 'linear'}
+    config = {}
+    if json_path.isspace() or json_path == '':
+        config = default_config
     else:
         with open(json_path) as f:
             json_file = json.load(f)
-        config = json_file.get('config', {})
-        config.setdefault('dt', 0.01)
-        config.setdefault('total_time', 10)
-        config.setdefault('dim', 3)
-        config.setdefault('window_size', 10)
-        config.setdefault('need_bias', False)
-        config.setdefault('other_items', '')
-        config.setdefault('kernel', 'linear')
-        f.close()
+            json_config = json_file.get('config', {})
+            for (key, val) in default_config.items():
+                if key in json_config.keys():
+                    config[key] = json_config.pop(key)
+                else:
+                    config[key] = val
+            if len(json_config) != 0:
+                raise Exception('Invalid parameter: ' + str(json_config))
+            f.close()
     return config, get_hash_code(json_file, config)
 
 
@@ -116,4 +120,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/complex_tank.json")
+    main("./automata/buck_converter.json")

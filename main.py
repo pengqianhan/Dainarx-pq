@@ -25,6 +25,7 @@ def run(data_list, config):
         change_points = find_change_point(data, get_feature, w=config['window_size'])
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
+    Slice.Method = config['clustering_method']
     Slice.fit_threshold(slice_data)
     # TODO: 修改聚类
     clustering(slice_data)
@@ -120,4 +121,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/buck_converter.json")
+    main("./automata/test.json")

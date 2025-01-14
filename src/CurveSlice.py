@@ -49,7 +49,7 @@ class Slice:
     def __init__(self, data, get_feature, isFront):
         self.data = data
         self.get_feature = get_feature
-        self.feature = np.array(get_feature(data)).astype(np.float64)
+        self.feature = get_feature(data)
         self.mode = None
         self.isFront = isFront
 

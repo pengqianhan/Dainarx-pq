@@ -33,7 +33,10 @@ def find_change_point(data: np.array, get_feature, w: int = 10, th: float = 0.1,
     while pos + w < data.shape[1]:
         feature = get_feature(data[:, pos:(pos + w)])
         if last is not None:
-            err = np.mean(np.abs(feature - last), axis=1)
+            err = []
+            for i in range(len(feature)):
+                err.append(np.mean(np.abs(feature[i] - last[i])))
+            err = np.array(err)
             if np.sum(err > th) > 0 and tail_len == 0:
                 change_points.append(pos + w - 2)
                 tail_len = w

@@ -88,7 +88,6 @@ class FeatureExtractor:
             res.append(x)
             if need_err:
                 err.append(max(np.abs((a @ x) - b)))
-        res = np.array(res)
         if need_err:
             return res, err
         return res

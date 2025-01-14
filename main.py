@@ -20,7 +20,7 @@ def run(data_list, config):
     get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
     slice_data = []
     for data in data_list:
-        change_points = find_change_point(data, get_feature)
+        change_points = find_change_point(data, get_feature, w=4, merge_th=4)
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)
@@ -114,4 +114,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/test.json")
+    main("./automata/complex_tank.json")

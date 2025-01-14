@@ -52,7 +52,7 @@ class Slice:
 
     def __and__(self, other):
         _, err = self.get_feature([self.data, other.data], is_list=True, need_err=True)
-        return np.sum(err) < 0.001
+        return np.sum(err) < 1e-4
 
 
 def slice_curve(cut_data, data, change_points, get_feature):

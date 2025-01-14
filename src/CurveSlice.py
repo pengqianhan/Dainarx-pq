@@ -4,7 +4,7 @@ import numpy as np
 class Slice:
     RelativeErrorThreshold = []
     AbsoluteErrorThreshold = []
-    ToleranceRatio = 1e-1
+    ToleranceRatio = 0.5
     FitErrorThreshold = 1.
     Method = 'fit'
 
@@ -69,7 +69,7 @@ class Slice:
             return True
         else:
             _, err, fit_dim = self.get_feature([self.data, other.data], is_list=True)
-            return fit_dim <= max(self.fit_dim, other.fit_dim) and max(err) < 0.1
+            return fit_dim <= max(self.fit_dim, other.fit_dim) and max(err) < Slice.FitErrorThreshold
 
 
 def slice_curve(cut_data, data, change_points, get_feature):

@@ -17,10 +17,11 @@ from src.BuildSystem import build_system, get_init_state
 
 
 def run(data_list, config):
-    get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
+    get_feature = FeatureExtractor(len(data_list[0]), config['dim'],
+                                   config['need_bias'], config['other_items'])
     slice_data = []
     for data in data_list:
-        change_points = find_change_point(data, get_feature, w=4, merge_th=4)
+        change_points = find_change_point(data, get_feature, w=10, merge_th=10)
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)
@@ -85,7 +86,7 @@ def main(json_path: str, data_path='data', need_creat=None):
             mode_list.append(mode_data_temp)
 
     print("Be running!")
-    sys = run(data[1:], config)
+    sys = run(data[0:], config)
 
     print("Start simulation")
     fit_idx = 0
@@ -114,4 +115,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/complex_tank.json")
+    main("./automata/buck_converter.json")

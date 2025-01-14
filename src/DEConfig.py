@@ -1,18 +1,70 @@
+import re
+
 import numpy as np
 from src.DE import DE
 
 
 class FeatureExtractor:
-    def __init__(self, dim: int, need_bias: bool, other_items: str):
+    @staticmethod
+    def unfoldItem(expr_list, idx, var_num):
+        res = []
+        expr_list = expr_list.copy()
+        for expr in expr_list:
+            expr = re.sub(r'x\[', 'x[' + str(idx) + '][', expr)
+            expr = re.sub(r'x(\d)', r'x[\1]', expr)
+            for i in range(var_num):
+                if i == idx:
+                    continue
+                res.append(re.sub(r'x_\[', 'x[' + str(i) + '][', expr))
+        return res
+
+    @staticmethod
+    def unfoldDigit(expr_list, dim):
+        res = []
+        for expr in expr_list:
+            for i in range(dim):
+                res.append(re.sub(r'\[\?', r"[" + str(i), expr))
+        return res
+
+    @staticmethod
+    def extractValidExpression(expr_list, idx):
+        res = []
+        for expr in expr_list:
+            if expr.isspace() or expr == '':
+                continue
+            expr = re.sub(r'\[(\d+)', lambda x: '[' + str(int(x.group(1)) - 1), expr)
+            if ':' not in expr:
+                res.append(expr)
+            else:
+                filed, s = expr.split(':')
+                if 'x' + str(idx) in filed:
+                    res.append(s)
+        return res
+
+    @staticmethod
+    def analyticalExpression(expr_list: str, var_num, dim):
+        res = [[] for _ in range(var_num)]
+        expr_list = expr_list.split(';')
+        for idx in range(var_num):
+            expr = FeatureExtractor.extractValidExpression(expr_list, idx)
+            expr = FeatureExtractor.unfoldDigit(expr, dim)
+            expr = FeatureExtractor.unfoldItem(expr, idx, var_num)
+            for s in expr:
+                res[idx].append(eval('lambda x: ' + s))
+        return res
+
+    def __init__(self, var_num: int, dim: int, need_bias: bool, other_items: str):
+        self.var_num = var_num
         self.dim = dim
         self.need_bias = need_bias
-        self.fun_list = DE.analyticalExpression(other_items)
+        self.fun_list = FeatureExtractor.analyticalExpression(other_items, var_num, dim)
 
     def get_items(self, data, idx):
-        res = list(data[idx][(-self.dim):])
-        delay_array = [0] + res.copy()
-        for fun in self.fun_list:
-            res.append(fun(delay_array))
+        res = []
+        for i in range(len(data[idx]) - self.dim, len(data[idx])):
+            res.append(data[idx][i])
+        for fun in self.fun_list[idx]:
+            res.append(fun(data))
         if self.need_bias:
             res.append(1.)
         return res
@@ -51,7 +103,7 @@ class FeatureExtractor:
 
 
 if __name__ == '__main__':
-    get_feature = FeatureExtractor(1, True, "")
+    get_feature = FeatureExtractor(2, 1, True, "")
     feature, err = get_feature([[[1, 1, 1, 1, 1], [1, 3, 5, 7, 9]], [[2, 2, 2, 2, 2], [1, 3, 5, 7, 9]]], is_list=True,
                                need_err=True)
     print(feature, err)

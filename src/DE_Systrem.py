@@ -100,9 +100,11 @@ class DESystem:
         self.init_state = init_state.copy()
         self.state = init_state.copy()
         self.eq = eq.copy()
+        self.fit_state_size()
+        self.var_list = [('x' + str(idx)) for idx in range(self.var_num)]
 
     def fit_state_size(self):
-        state = [deque([0] * self.config.dim) * self.var_num]
+        state = [deque(0 for _ in range(self.config.dim)) for _ in range(self.var_num)]
         for i in range(min(len(self.state), self.var_num)):
             for j in range(min(len(self.state[i]), self.config.dim)):
                 state[i][j] = self.state[i][j]
@@ -111,13 +113,19 @@ class DESystem:
     def next(self):
         res = []
         for i in range(self.var_num):
-            res.append(np.dot(self.config.get_items(self.state, i), eq[i]))
+            res.append(np.dot(self.config.get_items(self.state, i), self.eq[i]))
         for i in range(self.var_num):
             self.state[i].pop()
             self.state[i].appendleft(res[i])
         return res
 
     def reset(self, init_state):
+        res = []
+        for var in self.var_list:
+            res.append(init_state.get(var, []))
+        self.clear(res)
+
+    def clear(self, init_state):
         self.state = init_state.copy()
         self.fit_state_size()
 
@@ -127,12 +135,12 @@ class DESystem:
 
 
 if __name__ == "__main__":
-    eq = r"""x1[1] = x1[0] + (-271.6981 * x1[0] + -377.3585 * x2[0] + 377.3585 * 24) ,
-                    x2[1] = x2[0] + (454.5455 * x1[0] + -45.4545 * x2[0] + 0 * 24)"""
-    sys = ODESystem(eq, ['x1', 'x2'])
+    get_feature = FeatureExtractor(2, 1, True, '')
+    eq = [[1.0, 0.0], [1.0, 1.0]]
+    sys = DESystem(eq, [], get_feature)
     res = []
     for i in range(1000):
-        res.append(sys.next(1e-5))
+        res.append(sys.next())
     res = np.array(res)
-    plt.plot(np.arange(res.shape[0]), res[:, 0])
+    plt.plot(np.arange(res.shape[0]), res[:, 1])
     plt.show()

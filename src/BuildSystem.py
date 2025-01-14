@@ -27,10 +27,7 @@ def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, 
         de_list = []
         # TODO: 耦合的差分方程
         feature_list = get_feature(cur_list, is_list=True)
-        for feature in feature_list:
-            var_list.append('x' + str(len(var_list)))
-            de_list.append(DE(feature, [], has_bias, other_items))
-        mode_list[mode] = Node(var_list, de_list)
+        mode_list[mode] = DESystem(feature_list, [], get_feature)
     adj = {}
     for (u, v), model in res_adj.items():
         if adj.get(u) is None:

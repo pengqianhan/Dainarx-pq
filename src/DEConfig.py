@@ -80,7 +80,7 @@ class FeatureExtractor:
         for i in range(len(data[idx]) - self.dim + max_dim, len(data[idx])):
             res.append(0.)
         for (fun, dim) in zip(self.fun_list[idx], self.fun_dim[idx]):
-            if dim > max_dim and False:
+            if dim > max_dim:
                 res.append(0.)
             else:
                 res.append(fun(data))

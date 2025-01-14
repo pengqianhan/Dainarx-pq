@@ -6,10 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from CreatData import creat_data
+from src.DEConfig import FeatureExtractor
 from src.utils import *
 
 from src.CurveSlice import Slice, slice_curve
-from src.ChangePoints import FeatureExtractor, find_change_point
+from src.ChangePoints import find_change_point
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
@@ -19,7 +20,7 @@ def run(data_list, config):
     get_feature = FeatureExtractor(config['dim'], config['need_bias'], config['other_items'])
     slice_data = []
     for data in data_list:
-        change_points, err_data = find_change_point(data, get_feature)
+        change_points = find_change_point(data, get_feature)
         print(change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.fit_threshold(slice_data)
@@ -66,6 +67,7 @@ def main(json_path: str, data_path='data', need_creat=None):
 
     mode_list = []
     data = []
+    gt_list = []
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(data_path):
@@ -77,6 +79,7 @@ def main(json_path: str, data_path='data', need_creat=None):
                 continue
             npz_file = np.load(os.path.join(root, file))
             state_data_temp, mode_data_temp = npz_file['arr_0'], npz_file['arr_1']
+            gt_list.append(get_ture_chp(mode_data_temp))
             print("GT: ", get_ture_chp(mode_data_temp))
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
@@ -91,7 +94,7 @@ def main(json_path: str, data_path='data', need_creat=None):
 
     init_state = get_init_state(data, mode_list, config['dim'])
     fit_data = [data[:, i] for i in range(config['dim'])]
-    mode_data = []
+    mode_data = list(mode_list[:config['dim']])
     sys.reset(init_state)
     for i in range(data.shape[1] - config['dim']):
         state, mode = sys.next()
@@ -99,10 +102,15 @@ def main(json_path: str, data_path='data', need_creat=None):
         mode_data.append(mode)
     fit_data = np.array(fit_data)
 
+    print(f"mode number: {len(sys.mode_list)}")
+
     for var_idx in range(data.shape[0]):
         plt.plot(np.arange(len(data[var_idx])), data[var_idx], color='c')
         plt.plot(np.arange(fit_data.shape[0]), fit_data[:, var_idx], color='r')
         plt.show()
+    plt.plot(np.arange(len(mode_list)), mode_list, color='c')
+    plt.plot(np.arange(len(mode_data)), mode_data, color='r')
+    plt.show()
 
 
 if __name__ == "__main__":

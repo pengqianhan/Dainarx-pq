@@ -42,9 +42,8 @@ class Slice:
 
     def __init__(self, data, get_feature, isFront):
         self.data = data
-        self.feature = []
-        for v in self.data:
-            self.feature.append(np.array(get_feature(v)).astype(np.float64))
+        self.get_feature = get_feature
+        self.feature = np.array(get_feature(data)).astype(np.float64)
         self.mode = None
         self.isFront = isFront
 
@@ -52,14 +51,8 @@ class Slice:
         self.mode = mode
 
     def __and__(self, other):
-        idx = 0
-        for v1, v2 in zip(self.feature, other.feature):
-            relative_dis, dis = Slice.get_dis(v1, v2)
-            if relative_dis > Slice.RelativeErrorThreshold[idx] and \
-                    dis > Slice.AbsoluteErrorThreshold[idx]:
-                return False
-            idx += 1
-        return True
+        _, err = self.get_feature([self.data, other.data], is_list=True, need_err=True)
+        return np.sum(err) < 0.001
 
 
 def slice_curve(cut_data, data, change_points, get_feature):

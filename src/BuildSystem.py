@@ -4,6 +4,7 @@ import numpy as np
 from src.CurveSlice import Slice
 from src.HybridAutomata import Node, HybridAutomata
 from src.DE import DE
+from src.DE_Systrem import DESystem
 
 
 class ModelFun:
@@ -18,17 +19,17 @@ def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, 
     data_of_mode = {}
     for cur in data:
         if data_of_mode.get(cur.mode) is None:
-            data_of_mode[cur.mode] = [[] for _ in range(len(cur.data))]
-        for i in range(len(cur.data)):
-            data_of_mode[cur.mode][i].append(cur.data[i])
+            data_of_mode[cur.mode] = []
+        data_of_mode[cur.mode].append(cur.data)
     mode_list = {}
     for (mode, cur_list) in data_of_mode.items():
         var_list = []
         de_list = []
         # TODO: 耦合的差分方程
-        for cur in cur_list:
+        feature_list = get_feature(cur_list, is_list=True)
+        for feature in feature_list:
             var_list.append('x' + str(len(var_list)))
-            de_list.append(DE(get_feature(cur), [], has_bias, other_items))
+            de_list.append(DE(feature, [], has_bias, other_items))
         mode_list[mode] = Node(var_list, de_list)
     adj = {}
     for (u, v), model in res_adj.items():

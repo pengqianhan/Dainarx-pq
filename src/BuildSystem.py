@@ -23,9 +23,6 @@ def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, 
         data_of_mode[cur.mode].append(cur.data)
     mode_list = {}
     for (mode, cur_list) in data_of_mode.items():
-        var_list = []
-        de_list = []
-        # TODO: 耦合的差分方程
         feature_list = get_feature(cur_list, is_list=True)
         mode_list[mode] = DESystem(feature_list, [], get_feature)
     adj = {}
@@ -37,7 +34,6 @@ def build_system(data: list[Slice], res_adj: dict, get_feature, has_bias=False, 
 
 
 def get_init_state(data, mode_list, bias):
-    # TODO: match correct mode
     init_state = {'mode': mode_list[bias - 1]}
     for i in range(data.shape[0]):
         init_state['x' + str(i)] = data[i, (bias - 1)::-1]

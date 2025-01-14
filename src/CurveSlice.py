@@ -4,7 +4,7 @@ import numpy as np
 class Slice:
     RelativeErrorThreshold = []
     AbsoluteErrorThreshold = []
-    ToleranceRatio = 0.5
+    ToleranceRatio = 1e-1
     FitErrorThreshold = 1.
     Method = 'fit'
 
@@ -18,14 +18,16 @@ class Slice:
         return relative_dis, dis
 
     @staticmethod
-    def fit_threshold_one(get_feature, feature1, feature2):
+    def fit_threshold_one(get_feature, data1, data2):
+        feature1 = data1.feature
+        feature2 = data2.feature
         assert len(feature1) == len(feature2)
-        _, err = get_feature([feature1, feature2], is_list=True, need_err=True)
+        _, err = get_feature([data1.data, data2.data], is_list=True, need_err=True)
+        Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
             Slice.RelativeErrorThreshold.append(1e-1)
             Slice.AbsoluteErrorThreshold.append(1e-1)
         idx = 0
-        Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         for v1, v2 in zip(feature1, feature2):
             relative_dis, dis = Slice.get_dis(v1, v2)
             if relative_dis > 1e-4:
@@ -42,7 +44,7 @@ class Slice:
         for i in range(len(data)):
             if data[i].isFront:
                 continue
-            Slice.fit_threshold_one(data[i].get_feature, data[i].feature, data[i - 1].feature)
+            Slice.fit_threshold_one(data[i].get_feature, data[i], data[i - 1])
 
     def __init__(self, data, get_feature, isFront):
         self.data = data

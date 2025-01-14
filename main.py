@@ -27,7 +27,6 @@ def run(data_list, config):
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.Method = config['clustering_method']
     Slice.fit_threshold(slice_data)
-    # TODO: 修改聚类
     clustering(slice_data)
     adj = guard_learning(slice_data, config['kernel'])
     sys = build_system(slice_data, adj, get_feature, config['need_bias'], config['other_items'])

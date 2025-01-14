@@ -4,7 +4,7 @@ import numpy as np
 class Slice:
     RelativeErrorThreshold = []
     AbsoluteErrorThreshold = []
-    ToleranceRatio = 0.5
+    ToleranceRatio = 0.1
     FitErrorThreshold = 1.
     Method = 'fit'
 
@@ -36,7 +36,7 @@ class Slice:
                     min(Slice.RelativeErrorThreshold[idx], relative_dis * Slice.ToleranceRatio)
             if dis > 1e-4:
                 Slice.AbsoluteErrorThreshold[idx] = \
-                    min(Slice.AbsoluteErrorThreshold[idx], dis * Slice.ToleranceRatio)
+                    min(Slice.AbsoluteErrorThreshold[idx], max(dis * Slice.ToleranceRatio, 1e-6))
             idx += 1
         return True
 

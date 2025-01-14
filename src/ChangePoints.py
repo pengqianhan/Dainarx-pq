@@ -31,17 +31,13 @@ def find_change_point(data: np.array, get_feature, w: int = 10, th: float = 0.1,
         merge_th = w
 
     while pos + w < data.shape[1]:
-        feature = get_feature(data[:, pos:(pos + w)])[0]
+        feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)])
         if last is not None:
-            err = []
-            for i in range(len(feature)):
-                err.append(np.mean(np.abs(feature[i] - last[i])))
-            err = np.array(err)
-            if np.sum(err > th) > 0 and tail_len == 0:
+            if (max(now_err) > 1e-8 or fit_dim != last) and tail_len == 0:
                 change_points.append(pos + w - 2)
                 tail_len = w
             tail_len = max(tail_len - 1, 0)
-        last = feature
+        last = fit_dim
         pos += 1
 
     res = mergeChangePoints(change_points, merge_th)

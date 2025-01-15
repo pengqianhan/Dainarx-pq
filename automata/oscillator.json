@@ -79,6 +79,6 @@
     "total_time": 10,
     "dim": 2,
     "need_bias": true,
-    "other_items": "x_[?]; sin(x_[?])"
+    "other_items": "x_[?]; sin(x_[?]); sin(x[?])"
   }
 }

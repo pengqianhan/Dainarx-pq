@@ -2,6 +2,7 @@ import re
 
 import numpy as np
 from src.DE import DE
+from math import *
 
 
 class FeatureExtractor:

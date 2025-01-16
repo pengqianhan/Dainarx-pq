@@ -39,7 +39,7 @@ def get_config(json_path):
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
     default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
-                      'minus': False, 'need_bias': False, 'other_items': '', 'kernel': 'linear'}
+                      'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear'}
     config = {}
     if json_path.isspace() or json_path == '':
         config = default_config

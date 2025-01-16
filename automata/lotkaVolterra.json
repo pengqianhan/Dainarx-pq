@@ -80,7 +80,7 @@
     "dim": 1,
     "need_bias": true,
     "window_size": 6,
-    "other_items": "x[?] * x_[?]",
+    "other_items": "x_[?]; x[?] * x_[?]",
     "kernel": "rbf"
   }
 }

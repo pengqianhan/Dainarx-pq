@@ -77,7 +77,7 @@
   "config": {
     "dt": 0.01,
     "total_time": 10,
-    "dim": 2,
+    "dim": 1,
     "need_bias": true,
     "other_items": "x_[?]; sin(x_[?]); sin(x[?])",
     "kernel": "rbf"

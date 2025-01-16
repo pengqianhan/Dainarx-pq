@@ -29,7 +29,7 @@ def run(data_list, config):
     Slice.fit_threshold(slice_data)
     clustering(slice_data)
     adj = guard_learning(slice_data, config['kernel'])
-    sys = build_system(slice_data, adj, get_feature, config['need_bias'], config['other_items'])
+    sys = build_system(slice_data, adj, get_feature)
     return sys
 
 
@@ -120,4 +120,4 @@ def main(json_path: str, data_path='data', need_creat=None):
 
 
 if __name__ == "__main__":
-    main("./automata/lander.json")
+    main("./automata/non_linear/lander.json")

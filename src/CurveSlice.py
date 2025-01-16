@@ -22,7 +22,7 @@ class Slice:
         feature1 = data1.feature
         feature2 = data2.feature
         assert len(feature1) == len(feature2)
-        _, err, fit_dim = get_feature([data1.data, data2.data], is_list=True, need_err=True)
+        _, err, fit_dim = get_feature([data1.data, data2.data], is_list=True)
         if fit_dim <= max(data1.fit_dim, data2.fit_dim):
             Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         while len(Slice.RelativeErrorThreshold) < len(feature1):

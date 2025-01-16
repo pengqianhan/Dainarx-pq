@@ -23,7 +23,7 @@ def run(data_list, config):
     slice_data = []
     for data in data_list:
         change_points = find_change_point(data, get_feature, w=config['window_size'])
-        print(change_points)
+        print("ChP:\t", change_points)
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.Method = config['clustering_method']
     Slice.fit_threshold(slice_data)
@@ -86,7 +86,7 @@ def main(json_path: str, data_path='data', need_creat=None):
             npz_file = np.load(os.path.join(root, file))
             state_data_temp, mode_data_temp = npz_file['arr_0'], npz_file['arr_1']
             gt_list.append(get_ture_chp(mode_data_temp))
-            print("GT: ", get_ture_chp(mode_data_temp))
+            print("GT:\t", get_ture_chp(mode_data_temp))
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
 

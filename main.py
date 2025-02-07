@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 import logging
 
 import numpy as np
@@ -15,6 +16,7 @@ from src.ChangePoints import find_change_point
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
+from src.Evaluation import eva_trace
 
 
 def run(data_list, config):
@@ -27,7 +29,9 @@ def run(data_list, config):
         slice_curve(slice_data, data, change_points, get_feature)
     Slice.Method = config['clustering_method']
     Slice.fit_threshold(slice_data)
+    start_time = time.time()
     clustering(slice_data)
+    print(f"clustering time: {time.time() - start_time}")
     adj = guard_learning(slice_data, config['kernel'])
     sys = build_system(slice_data, adj, get_feature)
     return sys
@@ -91,7 +95,7 @@ def main(json_path: str, data_path='data', need_creat=None):
             mode_list.append(mode_data_temp)
 
     print("Be running!")
-    sys = run(data[0:], config)
+    sys = run(data[1:], config)
 
     print("Start simulation")
     fit_idx = 0
@@ -117,6 +121,7 @@ def main(json_path: str, data_path='data', need_creat=None):
     plt.plot(np.arange(len(mode_list)), mode_list, color='c')
     plt.plot(np.arange(len(mode_data)), mode_data, color='r')
     plt.show()
+    print(eva_trace(get_ture_chp(mode_list), np.transpose(fit_data), get_ture_chp(mode_data), data, config['dt']))
 
 
 if __name__ == "__main__":

@@ -87,7 +87,7 @@
     }
   ],
   "config": {
-    "dt": 1E-6,
+    "dt": 1E-5,
     "total_time": 0.02,
     "dim": 1,
     "need_bias": true,

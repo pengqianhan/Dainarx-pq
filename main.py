@@ -16,28 +16,33 @@ from src.ChangePoints import find_change_point
 from src.Clustering import clustering
 from src.GuardLearning import guard_learning
 from src.BuildSystem import build_system, get_init_state
-from src.Evaluation import eva_trace
+from src.Evaluation import eva_trace, Evaluation
 
 
-def run(data_list, config):
+def run(data_list, config, evaluation: Evaluation):
     get_feature = FeatureExtractor(len(data_list[0]), dim=config['dim'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
     slice_data = []
+    chp_list = []
     for data in data_list:
         change_points = find_change_point(data, get_feature, w=config['window_size'])
+        chp_list.append(change_points)
         print("ChP:\t", change_points)
         slice_curve(slice_data, data, change_points, get_feature)
+    evaluation.submit(chp=chp_list)
+    evaluation.recording_time("change_points")
     Slice.Method = config['clustering_method']
     Slice.fit_threshold(slice_data)
-    start_time = time.time()
     clustering(slice_data)
-    print(f"clustering time: {time.time() - start_time}")
+    evaluation.recording_time("clustering")
     adj = guard_learning(slice_data, config['kernel'])
+    evaluation.recording_time("guard_learning")
     sys = build_system(slice_data, adj, get_feature)
+    evaluation.stop("total")
     return sys
 
 
-def get_config(json_path):
+def get_config(json_path, evaluation: Evaluation):
     logging.basicConfig(level=logging.ERROR)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(json_path):
@@ -50,6 +55,7 @@ def get_config(json_path):
     else:
         with open(json_path) as f:
             json_file = json.load(f)
+            evaluation.submit(gt_mode_num=len(json_file.get('automation', {'mode': []})['mode']))
             json_config = json_file.get('config', {})
             for (key, val) in default_config.items():
                 if key in json_config.keys():
@@ -62,8 +68,9 @@ def get_config(json_path):
     return config, get_hash_code(json_file, config)
 
 
-def main(json_path: str, data_path='data', need_creat=None):
-    config, hash_code = get_config(json_path)
+def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
+    evaluation = Evaluation(json_path)
+    config, hash_code = get_config(json_path, evaluation)
     print('config: ')
     for key, value in config.items():
         print(f'\t{key}: {value}')
@@ -94,9 +101,11 @@ def main(json_path: str, data_path='data', need_creat=None):
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
 
+    train_idx = 1
     print("Be running!")
-    sys = run(data[1:], config)
-
+    evaluation.submit(gt_chp=gt_list[train_idx:])
+    evaluation.start()
+    sys = run(data[train_idx:], config, evaluation)
     print("Start simulation")
     fit_idx = 0
     data = data[fit_idx]
@@ -111,18 +120,24 @@ def main(json_path: str, data_path='data', need_creat=None):
         fit_data.append(state)
         mode_data.append(mode)
     fit_data = np.array(fit_data)
-
+    evaluation.submit(mode_num=len(sys.mode_list))
     print(f"mode number: {len(sys.mode_list)}")
 
-    for var_idx in range(data.shape[0]):
-        plt.plot(np.arange(len(data[var_idx])), data[var_idx], color='c')
-        plt.plot(np.arange(fit_data.shape[0]), fit_data[:, var_idx], color='r')
+    if need_plot:
+        for var_idx in range(data.shape[0]):
+            plt.plot(np.arange(len(data[var_idx])), data[var_idx], color='c')
+            plt.plot(np.arange(fit_data.shape[0]), fit_data[:, var_idx], color='r')
+            plt.show()
+        plt.plot(np.arange(len(mode_list)), mode_list, color='c')
+        plt.plot(np.arange(len(mode_data)), mode_data, color='r')
         plt.show()
-    plt.plot(np.arange(len(mode_list)), mode_list, color='c')
-    plt.plot(np.arange(len(mode_data)), mode_data, color='r')
-    plt.show()
-    print(eva_trace(get_ture_chp(mode_list), np.transpose(fit_data), get_ture_chp(mode_data), data, config['dt']))
+    evaluation.submit(fit_mode=mode_list, fit_data=np.transpose(fit_data),
+                      gt_mode=mode_data, gt_data=data, dt=config['dt'])
+    return evaluation.calc()
 
 
 if __name__ == "__main__":
-    main("./automata/non_linear/lander.json")
+    eval_log = main("./automata/FaMoS/two_state_ha.json")
+    print("Evaluation log:")
+    for key_, val_ in eval_log.items():
+        print(f"{key_}: {val_}")

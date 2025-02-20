@@ -22,6 +22,7 @@ from src.Evaluation import eva_trace, Evaluation
 def run(data_list, config, evaluation: Evaluation):
     get_feature = FeatureExtractor(len(data_list[0]), dim=config['dim'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
+    Slice.clear()
     slice_data = []
     chp_list = []
     for data in data_list:

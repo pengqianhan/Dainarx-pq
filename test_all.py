@@ -5,7 +5,7 @@ if __name__ == '__main__':
     write_head = False
     with open("evaluation_log.csv", "w") as f:
         for root, dirs, files in os.walk("automata"):
-            for file in files:
+            for file in sorted(files):
                 eval_log = main(os.path.join(root, file), need_plot=False)
                 key_line = "name"
                 line = file.split('.json')[0]

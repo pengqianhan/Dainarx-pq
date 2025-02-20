@@ -53,8 +53,6 @@ class Evaluation:
         return res
 
 
-
-
 def max_min_abs_diff(a, b):
     sorted_b = sorted(b)
     max_diff = 0

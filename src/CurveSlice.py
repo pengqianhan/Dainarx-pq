@@ -9,6 +9,14 @@ class Slice:
     Method = 'fit'
 
     @staticmethod
+    def clear():
+        Slice.RelativeErrorThreshold = []
+        Slice.AbsoluteErrorThreshold = []
+        Slice.ToleranceRatio = 0.1
+        Slice.FitErrorThreshold = 1.
+        Slice.Method = 'fit'
+
+    @staticmethod
     def get_dis(v1, v2):
         dis = np.linalg.norm(v1 - v2, ord=1)
         d1 = np.linalg.norm(v1, ord=1)

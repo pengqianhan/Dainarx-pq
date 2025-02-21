@@ -101,6 +101,7 @@
     "clustering_method": "fit",
     "minus": true,
     "need_bias": true,
-    "other_items": "x_[?]; x1 : x3[?] / x2[?];"
+    "other_items": "x_[?]; x1 : x3[?] / x2[?];",
+    "class_weight": 1
   }
 }

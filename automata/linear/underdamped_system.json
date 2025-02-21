@@ -55,6 +55,7 @@
     "dim": 2,
     "minus": true,
     "need_bias": true,
-    "other_items": ""
+    "other_items": "",
+    "class_weight": 1
   }
 }

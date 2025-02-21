@@ -22,6 +22,7 @@ class Evaluation:
     def recording_time(self, name):
         now = time.time()
         self.time_list.append((name, now - self.last_time))
+        print(f"recording {name} time: {now - self.last_time}")
         self.last_time = now
 
     def submit(self, **args):

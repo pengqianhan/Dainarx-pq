@@ -36,7 +36,7 @@ def run(data_list, config, evaluation: Evaluation):
     Slice.fit_threshold(slice_data)
     clustering(slice_data)
     evaluation.recording_time("clustering")
-    adj = guard_learning(slice_data, config['kernel'])
+    adj = guard_learning(slice_data, config['kernel'], config['class_weight'])
     evaluation.recording_time("guard_learning")
     sys = build_system(slice_data, adj, get_feature)
     evaluation.stop("total")
@@ -49,7 +49,8 @@ def get_config(json_path, evaluation: Evaluation):
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
     default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
-                      'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear'}
+                      'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear',
+                      'class_weight': 1.0}
     config = {}
     if json_path.isspace() or json_path == '':
         config = default_config
@@ -138,7 +139,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
-    eval_log = main("./automata/FaMoS/two_state_ha.json")
+    eval_log = main("./automata/FaMoS/simple_heating_system.json")
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

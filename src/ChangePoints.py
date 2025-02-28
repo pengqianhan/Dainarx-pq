@@ -32,7 +32,7 @@ def find_change_point(data: np.array, get_feature, w: int = 10, merge_th=None):
     while pos + w < data.shape[1]:
         feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)])
         if last is not None:
-            if (max(now_err) > 1e-8 or fit_dim != last) and tail_len == 0:
+            if (max(now_err) > 1e-8) and tail_len == 0:
                 change_points.append(pos + w - 2)
                 tail_len = w
             tail_len = max(tail_len - 1, 0)

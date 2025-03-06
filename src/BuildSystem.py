@@ -4,7 +4,7 @@ import numpy as np
 from src.CurveSlice import Slice
 from src.HybridAutomata import HybridAutomata
 from src.DE import DE
-from src.DE_Systrem import DESystem
+from src.DE_System import DESystem
 
 
 class ModelFun:

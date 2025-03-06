@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 from src.DE import ODE
-from src.DE_Systrem import ODESystem
+from src.ODE_System import ODESystem
 import json
 import matplotlib.pyplot as plt
 from math import *
@@ -53,14 +53,15 @@ class HybridAutomata:
         self.adj = adj
 
     @classmethod
-    def from_json(cls, info):
+    def from_json(cls, info: dict):
         var_list = re.split(r"\s*,\s*", info['var'])
+        input_list = re.split(r"\s*,\s*", info.get('input', ""))
         mode_list = {}
 
         adj = {}
         for mode in info['mode']:
             mode_id = mode['id']
-            mode_list[mode_id] = ODESystem(mode['eq'], var_list)
+            mode_list[mode_id] = ODESystem(mode['eq'], var_list, input_list)
             adj[mode_id] = []
         for edge in info['edge']:
             u_v = re.findall(r'\d+', edge['direction'])

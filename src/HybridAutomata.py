@@ -55,7 +55,11 @@ class HybridAutomata:
     @classmethod
     def from_json(cls, info: dict):
         var_list = re.split(r"\s*,\s*", info['var'])
-        input_list = re.split(r"\s*,\s*", info.get('input', ""))
+        input_expr = info.get('input')
+        if input_expr is None:
+            input_list = []
+        else:
+            input_list = re.split(r"\s*,\s*", info.get('input'))
         mode_list = {}
 
         adj = {}
@@ -68,6 +72,9 @@ class HybridAutomata:
             fun = eval('lambda ' + info['var'] + ':' + edge['condition'])
             adj[int(u_v[0])].append((int(u_v[1]), fun))
         return cls(mode_list, adj)
+
+    def getInput(self):
+        return self.mode_list[self.mode_state].getInput()
 
     def next(self, *args):
         res = list(self.mode_list[self.mode_state].next(*args))
@@ -83,9 +90,9 @@ class HybridAutomata:
                 break
         return res, self.mode_state
 
-    def reset(self, init_state):
+    def reset(self, init_state, *args):
         self.mode_state = init_state.get('mode', self.mode_state)
-        self.mode_list[self.mode_state].reset(init_state)
+        self.mode_list[self.mode_state].reset(init_state, *args)
 
 
 if __name__ == "__main__":

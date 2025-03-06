@@ -13,9 +13,10 @@ def mergeChangePoints(data, th: float):
     return res
 
 
-def find_change_point(data: np.array, get_feature, w: int = 10, merge_th=None):
+def find_change_point(data: np.array, input_data: np.array, get_feature, w: int = 10, merge_th=None):
     r"""
     :param data: (N, M) Sample points for N variables.
+    :param input_data: Input of system.
     :param get_feature: Feature extraction function.
     :param w: Slide window size, default is 10.
     :param merge_th: Change point merge threshold. The default value is w.
@@ -30,7 +31,7 @@ def find_change_point(data: np.array, get_feature, w: int = 10, merge_th=None):
         merge_th = w
 
     while pos + w < data.shape[1]:
-        feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)])
+        feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)], input_data[:, pos:(pos + w)])
         if last is not None:
             if (max(now_err) > 1e-8) and tail_len == 0:
                 change_points.append(pos + w - 2)

@@ -37,6 +37,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             cnt += 1
             state_data = []
             mode_data = []
+            input_data = []
             now = 0.
             sys.reset(init_state)
             while now < times:
@@ -44,9 +45,12 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
                 state, mode = sys.next(dT)
                 state_data.append(state)
                 mode_data.append(mode)
+                input_data.append(sys.getInput())
             state_data = np.transpose(np.array(state_data))
+            input_data = np.transpose(np.array(input_data))
             mode_data = np.array(mode_data)
-            np.savez(os.path.join(data_path, "test_data" + str(state_id)), state_data, mode_data)
+            np.savez(os.path.join(data_path, "test_data" + str(state_id)),
+                     state=state_data, mode=mode_data, input=input_data)
             state_id += 1
 
 

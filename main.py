@@ -19,17 +19,19 @@ from src.BuildSystem import build_system, get_init_state
 from src.Evaluation import eva_trace, Evaluation
 
 
-def run(data_list, config, evaluation: Evaluation):
-    get_feature = FeatureExtractor(len(data_list[0]), dim=config['dim'], minus=config['minus'],
+def run(data_list, config, evaluation: Evaluation, input_data):
+    input_data = np.array(input_data)
+    get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
+                                   dim=config['dim'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
     Slice.clear()
     slice_data = []
     chp_list = []
-    for data in data_list:
-        change_points = find_change_point(data, get_feature, w=config['window_size'])
+    for data, input_val in zip(data_list, input_data):
+        change_points = find_change_point(data, input_val, get_feature, w=config['window_size'])
         chp_list.append(change_points)
         print("ChP:\t", change_points)
-        slice_curve(slice_data, data, change_points, get_feature)
+        slice_curve(slice_data, data, input_val, change_points, get_feature)
     evaluation.submit(chp=chp_list)
     evaluation.recording_time("change_points")
     Slice.Method = config['clustering_method']
@@ -86,6 +88,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
     mode_list = []
     data = []
+    input_list = []
     gt_list = []
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -97,28 +100,30 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
             npz_file = np.load(os.path.join(root, file))
-            state_data_temp, mode_data_temp = npz_file['arr_0'], npz_file['arr_1']
+            state_data_temp, mode_data_temp = npz_file['state'], npz_file['mode']
             gt_list.append(get_ture_chp(mode_data_temp))
             print("GT:\t", get_ture_chp(mode_data_temp))
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
+            input_list.append(npz_file['input'])
 
     train_idx = 1
     print("Be running!")
     evaluation.submit(gt_chp=gt_list[train_idx:])
     evaluation.start()
-    sys = run(data[train_idx:], config, evaluation)
+    sys = run(data[train_idx:], config, evaluation, input_list[train_idx:])
     print("Start simulation")
     fit_idx = 0
     data = data[fit_idx]
     mode_list = mode_list[fit_idx]
+    input_list = input_list[fit_idx]
 
     init_state = get_init_state(data, mode_list, config['dim'])
     fit_data = [data[:, i] for i in range(config['dim'])]
     mode_data = list(mode_list[:config['dim']])
-    sys.reset(init_state)
-    for i in range(data.shape[1] - config['dim']):
-        state, mode = sys.next()
+    sys.reset(init_state, input_list[:, :config['dim']])
+    for i in range(config['dim'], data.shape[1]):
+        state, mode = sys.next(input_list[:, i])
         fit_data.append(state)
         mode_data.append(mode)
     fit_data = np.array(fit_data)
@@ -139,7 +144,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
-    eval_log = main("./automata/FaMoS/simple_heating_system.json")
+    eval_log = main("./automata/linear/underdamped_system_with_input.json.json")
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

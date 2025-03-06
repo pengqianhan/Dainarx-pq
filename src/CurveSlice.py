@@ -30,7 +30,8 @@ class Slice:
         feature1 = data1.feature
         feature2 = data2.feature
         assert len(feature1) == len(feature2)
-        _, err, fit_dim = get_feature([data1.data, data2.data], is_list=True)
+        _, err, fit_dim = get_feature([data1.data, data2.data],
+                                      [data1.input_data, data2.input_data], is_list=True)
         if fit_dim <= max(data1.fit_dim, data2.fit_dim):
             Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
@@ -55,10 +56,11 @@ class Slice:
                 continue
             Slice.fit_threshold_one(data[i].get_feature, data[i], data[i - 1])
 
-    def __init__(self, data, get_feature, isFront):
+    def __init__(self, data, input_data, get_feature, isFront):
         self.data = data
+        self.input_data = input_data
         self.get_feature = get_feature
-        self.feature, _, self.fit_dim = get_feature(data)
+        self.feature, _, self.fit_dim = get_feature(data, input_data)
         self.mode = None
         self.isFront = isFront
 
@@ -76,15 +78,19 @@ class Slice:
                 idx += 1
             return True
         else:
-            _, err, fit_dim = self.get_feature([self.data, other.data], is_list=True)
-            return fit_dim <= max(self.fit_dim, other.fit_dim) and max(err) < Slice.FitErrorThreshold
+            _, err, fit_dim = self.get_feature([self.data, other.data],
+                                               [self.input_data, other.input_data], is_list=True)
+            dim_condition = True
+            for i in range(len(fit_dim)):
+                dim_condition = dim_condition and fit_dim[i] <= max(self.fit_dim[i], other.fit_dim[i])
+            return dim_condition and max(err) < Slice.FitErrorThreshold
 
 
-def slice_curve(cut_data, data, change_points, get_feature):
+def slice_curve(cut_data, data, input_data, change_points, get_feature):
     last = 0
     for point in change_points:
         if point == 0:
             continue
-        cut_data.append(Slice(data[:, last:point], get_feature, last == 0))
+        cut_data.append(Slice(data[:, last:point], input_data[:, last:point], get_feature, last == 0))
         last = point
     return cut_data

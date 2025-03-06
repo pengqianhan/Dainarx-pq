@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from math import *
 
 
 class ODESystem:
@@ -46,7 +47,9 @@ class ODESystem:
                 res.append(eval("lambda t: " + expr))
         return res
 
-    def getInput(self, t):
+    def getInput(self, t=None):
+        if t is None:
+            t = self.now_time
         res = [fun(t) for fun in self.input_fun_list]
         return res
 

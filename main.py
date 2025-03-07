@@ -19,7 +19,7 @@ from src.BuildSystem import build_system, get_init_state
 from src.Evaluation import eva_trace, Evaluation
 
 
-def run(data_list, config, evaluation: Evaluation, input_data):
+def run(data_list, input_data, config, evaluation: Evaluation):
     input_data = np.array(input_data)
     get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
                                    dim=config['dim'], minus=config['minus'],
@@ -111,7 +111,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     print("Be running!")
     evaluation.submit(gt_chp=gt_list[train_idx:])
     evaluation.start()
-    sys = run(data[train_idx:], config, evaluation, input_list[train_idx:])
+    sys = run(data[train_idx:], input_list[train_idx:], config, evaluation)
     print("Start simulation")
     fit_idx = 0
     data = data[fit_idx]
@@ -144,7 +144,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
-    eval_log = main("./automata/linear/underdamped_system_with_input.json.json")
+    eval_log = main("./automata/linear/underdamped_system_with_input.json")
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

@@ -34,7 +34,7 @@ def find_change_point(data: np.array, input_data: np.array, get_feature, w: int 
         feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)], input_data[:, pos:(pos + w)])
         if last is not None:
             if (max(now_err) > 1e-8) and tail_len == 0:
-                change_points.append(pos + w - 2)
+                change_points.append(pos + w - 1)
                 tail_len = w
             tail_len = max(tail_len - 1, 0)
         last = fit_dim

@@ -11,13 +11,13 @@ def guard_learning(data: list[Slice], kernel='linear', class_weight=1.0):
         mode = data[i].mode
         if negative_sample.get(mode) is None:
             negative_sample[mode] = []
-        negative_sample[mode].append(np.transpose(data[i].data))
+        negative_sample[mode].append(np.transpose(data[i].data[:, :-1]))
         if i == 0 or data[i - 1].mode is None or data[i].isFront:
             continue
         idx = (data[i - 1].mode, data[i].mode)
         if positive_sample.get(idx) is None:
             positive_sample[idx] = []
-        positive_sample[idx].append(data[i].data[:, 0])
+        positive_sample[idx].append(data[i - 1].data[:, -1])
     for (key, val) in negative_sample.items():
         negative_sample[key] = np.concatenate(val)
 

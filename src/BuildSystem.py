@@ -27,10 +27,10 @@ def build_system(data: list[Slice], res_adj: dict, get_feature):
         feature_list = get_feature(cur_list[0], cur_list[1], is_list=True)[0]
         mode_list[mode] = DESystem(feature_list, [], [], get_feature)
     adj = {}
-    for (u, v), model in res_adj.items():
+    for (u, v), (model, reset_fun) in res_adj.items():
         if adj.get(u) is None:
             adj[u] = []
-        adj[u].append((v, ModelFun(model)))
+        adj[u].append((v, ModelFun(model), reset_fun))
     return HybridAutomata(mode_list, adj)
 
 

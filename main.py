@@ -38,7 +38,7 @@ def run(data_list, input_data, config, evaluation: Evaluation):
     Slice.fit_threshold(slice_data)
     clustering(slice_data)
     evaluation.recording_time("clustering")
-    adj = guard_learning(slice_data, config['kernel'], config['class_weight'])
+    adj = guard_learning(slice_data, get_feature, config['kernel'], config['class_weight'], config['need_reset'])
     evaluation.recording_time("guard_learning")
     sys = build_system(slice_data, adj, get_feature)
     evaluation.stop("total")
@@ -52,7 +52,7 @@ def get_config(json_path, evaluation: Evaluation):
         json_path = os.path.join(current_dir, json_path)
     default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
                       'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear',
-                      'class_weight': 1.0}
+                      'class_weight': 1.0, 'need_reset': False}
     config = {}
     if json_path.isspace() or json_path == '':
         config = default_config

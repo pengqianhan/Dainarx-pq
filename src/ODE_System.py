@@ -116,7 +116,7 @@ class ODESystem:
         self.fit_state_size()
         self.now_time = 0.
 
-    def load(self, other_sys):
+    def load(self, other_sys, *args):
         self.state = other_sys.state.copy()
         self.input_fun_list = other_sys.input_fun_list.copy()
         self.now_time = other_sys.now_time

@@ -70,7 +70,7 @@ class HybridAutomata:
         for edge in info['edge']:
             u_v = re.findall(r'\d+', edge['direction'])
             fun = eval('lambda ' + info['var'] + ':' + edge['condition'])
-            adj[int(u_v[0])].append((int(u_v[1]), fun))
+            adj[int(u_v[0])].append((int(u_v[1]), fun, None))
         return cls(mode_list, adj)
 
     def getInput(self):
@@ -79,15 +79,17 @@ class HybridAutomata:
     def next(self, *args):
         res = list(self.mode_list[self.mode_state].next(*args))
         mode_state = self.mode_state
+        cnt = 0
         while True:
             fl = True
-            for to, fun in self.adj.get(self.mode_state, {}):
+            cnt += 1
+            for to, fun, reset_val in self.adj.get(self.mode_state, {}):
                 if fun(*res):
-                    self.mode_list[to].load(self.mode_list[self.mode_state])
+                    self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
                     self.mode_state = to
                     fl = False
                     break
-            if fl:
+            if fl or cnt > 3:
                 break
         return res, mode_state
 

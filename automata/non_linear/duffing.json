@@ -1,0 +1,56 @@
+{
+  "automation": {
+    "var": "x",
+    "mode": [
+      {
+        "id": 1,
+        "eq": "x[2] = 0.2 * x[1] + x[0] - 0.5 * x[0] ** 3"
+      },
+      {
+        "id": 2,
+        "eq": "x[2] = 0.5 * x[1] + x[0] - 1.5 * x[0] ** 3"
+      }
+    ],
+    "edge": [
+      {
+        "direction": "1 -> 2",
+        "condition": "x >= 1.2"
+      },
+      {
+        "direction": "2 -> 1",
+        "condition": "x <= 0.8"
+      }
+    ]
+  },
+  "init_state": [
+    {
+      "mode": 2,
+      "x": [4]
+    },
+    {
+      "mode": 2,
+      "x": [5]
+    },
+    {
+      "mode": 2,
+      "x": [6]
+    },
+    {
+      "mode": 2,
+      "x": [7]
+    },
+    {
+      "mode": 2,
+      "x": [8]
+    }
+  ],
+  "config": {
+    "dt": 0.001,
+    "total_time": 10.0,
+    "dim": 2,
+    "need_bias": true,
+    "need_reset": true,
+    "other_items": "x[?] ** 3",
+    "class_weight": 1
+  }
+}

@@ -15,7 +15,7 @@ class ResetFun:
     def from_slice(cls, get_feature: FeatureExtractor, f_list: list[Slice], t_list: list[Slice]):
         fit_dim = max(max(s.fit_dim for s in t_list))
         eq_list = []
-        for i in range(fit_dim - 1):
+        for i in range(fit_dim):
             this_data = []
             this_input = []
             for f_slice, t_slice in zip(f_list, t_list):
@@ -34,7 +34,7 @@ class ResetFun:
         return res
 
     def valid(self):
-        return self.cnt < self.fit_dim - 1
+        return self.cnt < self.fit_dim
 
     def clear(self):
         self.cnt = 0

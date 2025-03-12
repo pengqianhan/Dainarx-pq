@@ -79,19 +79,21 @@ class HybridAutomata:
     def next(self, *args):
         res = list(self.mode_list[self.mode_state].next(*args))
         mode_state = self.mode_state
-        via_list = set()
-        is_ring = False
+        via_list = set(self.mode_state)
+        is_cycle = False
         while True:
             fl = True
             for to, fun, reset_val in self.adj.get(self.mode_state, {}):
                 if fun(*res):
                     self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
                     self.mode_state = to
-                    is_ring = to in via_list
+                    if to in via_list:
+                        print("find cycle!")
+                        is_cycle = True
                     via_list.add(to)
                     fl = False
                     break
-            if fl or is_ring:
+            if fl or is_cycle:
                 break
         return res, mode_state
 

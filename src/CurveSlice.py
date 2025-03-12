@@ -67,6 +67,13 @@ class Slice:
     def setMode(self, mode):
         self.mode = mode
 
+    def test_set(self, data, input_data, other_fit_dim):
+        _, err, fit_dim = self.get_feature([self.data] + data, [self.input_data] + input_data, is_list=True)
+        dim_condition = True
+        for i in range(len(fit_dim)):
+            dim_condition = dim_condition and fit_dim[i] <= max(self.fit_dim[i], other_fit_dim[i])
+        return dim_condition and max(err) < Slice.FitErrorThreshold
+
     def __and__(self, other):
         if Slice.Method == 'dis':
             idx = 0

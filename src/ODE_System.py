@@ -123,16 +123,17 @@ class ODESystem:
         self.now_time = other_sys.now_time
         self.fit_state_size()
         prefix = ','.join(self.var_list)
-        for var in self.var_list:
+        for i in range(len(self.var_list)):
+            var = self.var_list[i]
             reset_val = reset_dict.get(var, [])
-            for i in range(min(len(reset_val), self.max_dim)):
-                val = reset_val[i]
+            for j in range(min(len(reset_val), self.max_dim)):
+                val = reset_val[j]
                 if val == "":
                     continue
                 elif type(val) == str:
-                    self.state[i] = eval('lambda ' + prefix + ': ' + val)(*self.state[:, 0])
+                    self.state[i][j] = eval('lambda ' + prefix + ': ' + val)(*self.state[:, 0])
                 else:
-                    self.state[i] = float(reset_val[i])
+                    self.state[i][j] = float(reset_val[i])
 
 
 

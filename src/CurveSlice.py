@@ -34,6 +34,7 @@ class Slice:
                                       [data1.input_data, data2.input_data], is_list=True)
         if fit_dim <= max(data1.fit_dim, data2.fit_dim):
             Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
+            Slice.FitErrorThreshold = max(Slice.FitErrorThreshold, 1e-6)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
             Slice.RelativeErrorThreshold.append(1e-1)
             Slice.AbsoluteErrorThreshold.append(1e-1)

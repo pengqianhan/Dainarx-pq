@@ -31,4 +31,4 @@ def clustering(data: list[Slice]):
             data[i].mode = tot_mode
             mode_dict[tot_mode] = [[data[i].data], [data[i].input_data], data[i].fit_dim]
             tot_mode += 1
-        last_mode = data[i].mode
+        # last_mode = data[i].mode

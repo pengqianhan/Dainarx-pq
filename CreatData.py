@@ -38,19 +38,25 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             state_data = []
             mode_data = []
             input_data = []
-            now = 0.
+            change_points = [0]
             sys.reset(init_state)
+            now = 0.
+            idx = 0
             while now < times:
                 now += dT
-                state, mode = sys.next(dT)
+                idx += 1
+                state, mode, switched = sys.next(dT)
                 state_data.append(state)
                 mode_data.append(mode)
                 input_data.append(sys.getInput())
+                if switched:
+                    change_points.append(idx)
+            change_points.append(idx)
             state_data = np.transpose(np.array(state_data))
             input_data = np.transpose(np.array(input_data))
             mode_data = np.array(mode_data)
             np.savez(os.path.join(data_path, "test_data" + str(state_id)),
-                     state=state_data, mode=mode_data, input=input_data)
+                     state=state_data, mode=mode_data, input=input_data, change_points=change_points)
             state_id += 1
 
 

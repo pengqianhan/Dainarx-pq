@@ -82,12 +82,14 @@ class HybridAutomata:
         mode_state = self.mode_state
         via_list = {self.mode_state}
         is_cycle = False
+        switched = False
         while True:
             fl = True
             for to, fun, reset_val in self.adj.get(self.mode_state, {}):
                 if fun(*res):
                     self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
                     self.mode_state = to
+                    switched = True
                     if to in via_list:
                         print("find cycle!")
                         is_cycle = True
@@ -96,7 +98,7 @@ class HybridAutomata:
                     break
             if fl or is_cycle:
                 break
-        return res, mode_state
+        return res, mode_state, switched
 
     def reset(self, init_state, *args):
         self.mode_state = init_state.get('mode', self.mode_state)

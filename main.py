@@ -101,8 +101,9 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
                 continue
             npz_file = np.load(os.path.join(root, file))
             state_data_temp, mode_data_temp = npz_file['state'], npz_file['mode']
-            gt_list.append(get_ture_chp(mode_data_temp))
-            print("GT:\t", get_ture_chp(mode_data_temp))
+            change_point_list = npz_file.get('change_points', get_ture_chp(mode_data_temp))
+            gt_list.append(change_point_list)
+            print("GT:\t", change_point_list.tolist())
             data.append(state_data_temp)
             mode_list.append(mode_data_temp)
             input_list.append(npz_file['input'])
@@ -123,7 +124,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     mode_data = list(mode_list[:config['dim']])
     sys.reset(init_state, input_list[:, :config['dim']])
     for i in range(config['dim'], data.shape[1]):
-        state, mode = sys.next(input_list[:, i])
+        state, mode, switched = sys.next(input_list[:, i])
         fit_data.append(state)
         mode_data.append(mode)
     fit_data = np.array(fit_data)
@@ -144,7 +145,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
-    eval_log = main("./automata/ATVA/tanks.json")
+    eval_log = main("./automata/ATVA/ball.json")
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

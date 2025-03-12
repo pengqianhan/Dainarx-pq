@@ -44,7 +44,7 @@ class Evaluation:
 
         train_tc = 0.0
         for chp, gt in zip(self.data["chp"], self.data["gt_chp"]):
-            train_tc = max(train_tc, max_min_abs_diff(chp, gt), max_min_abs_diff(gt, chp)) * dt
+            train_tc = max(train_tc, max_min_abs_diff(chp, gt) * dt, max_min_abs_diff(gt, chp) * dt)
         res["clustering_error"] = abs(self.data['gt_mode_num'] - self.data['mode_num'])
         res["train_tc"] = train_tc
         res["max_diff"] = np.max(diff)

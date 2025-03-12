@@ -71,6 +71,7 @@ class ODESystem:
         self.fit_state_size()
         self.input_fun_list = self.analyticalInput()
         self.now_time = 0.
+        self.reset_val = {}
 
     def fit_state_size(self):
         state = np.zeros((self.var_num, self.max_dim)).astype(np.float64)
@@ -116,11 +117,20 @@ class ODESystem:
         self.fit_state_size()
         self.now_time = 0.
 
-    def load(self, other_sys, *args):
+    def load(self, other_sys, reset_dict):
         self.state = other_sys.state.copy()
         self.input_fun_list = other_sys.input_fun_list.copy()
         self.now_time = other_sys.now_time
         self.fit_state_size()
+        for var in self.var_list:
+            reset_val = reset_dict.get(var, [])
+            for i in range(min(len(reset_val), self.max_dim)):
+                val = reset_val[i]
+                if val == "":
+                    continue
+                else:
+                    self.state[i] = float(reset_val[i])
+
 
 
 if __name__ == "__main__":

@@ -70,7 +70,8 @@ class HybridAutomata:
         for edge in info['edge']:
             u_v = re.findall(r'\d+', edge['direction'])
             fun = eval('lambda ' + info['var'] + ':' + edge['condition'])
-            adj[int(u_v[0])].append((int(u_v[1]), fun, None))
+            reset_val = edge.get("reset", {})
+            adj[int(u_v[0])].append((int(u_v[1]), fun, reset_val))
         return cls(mode_list, adj)
 
     def getInput(self):

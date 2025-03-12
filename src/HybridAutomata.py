@@ -79,7 +79,7 @@ class HybridAutomata:
     def next(self, *args):
         res = list(self.mode_list[self.mode_state].next(*args))
         mode_state = self.mode_state
-        via_list = set(self.mode_state)
+        via_list = {self.mode_state}
         is_cycle = False
         while True:
             fl = True

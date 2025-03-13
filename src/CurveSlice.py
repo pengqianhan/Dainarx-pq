@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 
@@ -64,11 +66,21 @@ class Slice:
         self.feature, _, self.fit_dim = get_feature(data, input_data)
         self.mode = None
         self.isFront = isFront
+        self.idx = None
 
     def setMode(self, mode):
         self.mode = mode
 
-    def test_set(self, data, input_data, other_fit_dim):
+    def test_set(self, other_list):
+        data, input_data, other_fit_dim = [], [], None
+        for s in other_list:
+            data.append(s.data)
+            input_data.append(s.input_data)
+            if other_fit_dim is None:
+                other_fit_dim = copy.copy(s.fit_dim)
+            else:
+                other_fit_dim = min(other_fit_dim, s.fit_dim)
+
         _, err, fit_dim = self.get_feature([self.data] + data, [self.input_data] + input_data, is_list=True)
         dim_condition = True
         for i in range(len(fit_dim)):

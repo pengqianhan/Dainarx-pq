@@ -71,7 +71,6 @@
     "dim": 2,
     "need_bias": false,
     "need_reset": true,
-    "other_items": "",
-    "class_weight": 100
+    "other_items": ""
   }
 }

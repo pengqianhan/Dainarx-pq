@@ -5,10 +5,11 @@ from src.CurveSlice import Slice
 from src.Reset import ResetFun
 
 
-def guard_learning(data: list[Slice], get_feature, kernel='linear', class_weight=1.0, need_reset=False):
+def guard_learning(data: list[Slice], get_feature, config):
     positive_sample = {}
     negative_sample = {}
     slice_data = {}
+    need_reset = config['need_reset']
     for i in range(len(data)):
         if not data[i].valid:
             continue
@@ -35,7 +36,7 @@ def guard_learning(data: list[Slice], get_feature, kernel='linear', class_weight
 
     adj = {}
     for (u, v), sample in positive_sample.items():
-        svc = SVC(C=1e6, kernel=kernel, class_weight={0: class_weight, 1: 1})
+        svc = SVC(C=config['svm_c'], kernel=config['kernel'], class_weight={0: config['class_weight'], 1: 1})
         label = np.concatenate((np.zeros(negative_sample[u].shape[0]), np.ones(len(positive_sample[(u, v)]))))
         sample = np.concatenate((negative_sample[u], positive_sample[(u, v)]))
         svc.fit(sample, label)

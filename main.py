@@ -29,7 +29,7 @@ def run(data_list, input_data, config, evaluation: Evaluation):
     slice_data = []
     chp_list = []
     for data, input_val in zip(data_list, input_data):
-        change_points = find_change_point(data, input_val, get_feature, config['dt'], w=config['window_size'])
+        change_points = find_change_point(data, input_val, get_feature, w=config['window_size'])
         chp_list.append(change_points)
         print("ChP:\t", change_points)
         slice_curve(slice_data, data, input_val, change_points, get_feature)
@@ -39,10 +39,11 @@ def run(data_list, input_data, config, evaluation: Evaluation):
     Slice.fit_threshold(slice_data)
     clustering(slice_data, config['self_loop'])
     evaluation.recording_time("clustering")
-    adj = guard_learning(slice_data, get_feature, config['kernel'], config['class_weight'], config['need_reset'])
+    adj = guard_learning(slice_data, get_feature, config)
     evaluation.recording_time("guard_learning")
     sys = build_system(slice_data, adj, get_feature)
     evaluation.stop("total")
+    evaluation.submit(slice_data=slice_data)
     return sys
 
 
@@ -52,7 +53,7 @@ def get_config(json_path, evaluation: Evaluation):
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
     default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
-                      'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear',
+                      'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear', 'svm_c': 1e6,
                       'class_weight': 1.0, 'need_reset': False, 'self_loop': False}
     config = {}
     if json_path.isspace() or json_path == '':
@@ -113,6 +114,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     train_idx = 1
     print("Be running!")
     evaluation.submit(gt_chp=gt_list[train_idx:])
+    evaluation.submit(train_mode_list=mode_list[train_idx:])
     evaluation.start()
     sys = run(data[train_idx:], input_list[train_idx:], config, evaluation)
     print("Start simulation")

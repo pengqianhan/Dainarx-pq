@@ -13,7 +13,7 @@ def mergeChangePoints(data, th: float):
     return res
 
 
-def find_change_point(data: np.array, input_data: np.array, get_feature, dt, w: int = 10, merge_th=None):
+def find_change_point(data: np.array, input_data: np.array, get_feature, w: int = 10, merge_th=None):
     r"""
     :param data: (N, M) Sample points for N variables.
     :param input_data: Input of system.

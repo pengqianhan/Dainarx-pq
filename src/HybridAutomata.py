@@ -44,6 +44,7 @@ class Node:
 
 
 class HybridAutomata:
+    LoopWarning = True
     def __init__(self, mode_list, adj, init_mode=None):
         if init_mode is None:
             self.mode_state = next(iter(adj.keys()))
@@ -91,7 +92,8 @@ class HybridAutomata:
                     self.mode_state = to
                     switched = True
                     if to in via_list:
-                        print("find cycle!")
+                        if HybridAutomata.LoopWarning:
+                            print("warning: find loop!")
                         is_cycle = True
                     via_list.add(to)
                     fl = False

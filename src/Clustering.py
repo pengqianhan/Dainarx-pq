@@ -1,7 +1,7 @@
 from src.CurveSlice import Slice
 
 
-def clustering(data: list[Slice]):
+def clustering(data: list[Slice], self_loop=False):
     tot_mode = 1
     last_mode = None
     mode_dict = {}
@@ -31,4 +31,5 @@ def clustering(data: list[Slice]):
             data[i].mode = tot_mode
             mode_dict[tot_mode] = [[data[i].data], [data[i].input_data], data[i].fit_dim]
             tot_mode += 1
-        # last_mode = data[i].mode
+        if not self_loop:
+            last_mode = data[i].mode

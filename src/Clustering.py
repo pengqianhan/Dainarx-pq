@@ -8,6 +8,8 @@ def clustering(data: list[Slice], self_loop=False):
     delay_list = []
     for i in range(len(data)):
         data[i].idx = i
+        if not data[i].valid:
+            continue
         if data[i].isFront:
             last_mode = None
 

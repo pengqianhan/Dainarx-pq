@@ -1,6 +1,7 @@
 import copy
 
 import numpy as np
+import warnings
 
 
 class Slice:
@@ -58,12 +59,26 @@ class Slice:
             if data[i].isFront:
                 continue
             Slice.fit_threshold_one(data[i].get_feature, data[i], data[i - 1])
+        for s in data:
+            s.check_valid()
+
+    def check_valid(self):
+        if self.valid and self.err > Slice.FitErrorThreshold:
+            warnings.warn("Find a invalid segmentation!")
+            self.valid = False
 
     def __init__(self, data, input_data, get_feature, isFront):
         self.data = data
         self.input_data = input_data
         self.get_feature = get_feature
-        self.feature, _, self.fit_dim = get_feature(data, input_data)
+        self.valid = True
+        if len(data[0]) > get_feature.dim:
+            self.feature, err, self.fit_dim = get_feature(data, input_data)
+            self.err = np.max(err)
+        else:
+            self.feature, self.err, self.fit_dim = [], 1e6, []
+        if not self.valid:
+            warnings.warn("warning: find a invalid segmentation!")
         self.mode = None
         self.isFront = isFront
         self.idx = None

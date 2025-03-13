@@ -23,7 +23,7 @@ from src.HybridAutomata import HybridAutomata
 def run(data_list, input_data, config, evaluation: Evaluation):
     input_data = np.array(input_data)
     get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
-                                   dim=config['dim'], minus=config['minus'],
+                                   dim=config['dim'], dt=config['dt'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
     Slice.clear()
     slice_data = []

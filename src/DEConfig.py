@@ -64,14 +64,18 @@ class FeatureExtractor:
                 res_dim[idx].append(FeatureExtractor.findMaxDim(s) + 1)
         return res, res_dim
 
-    def __init__(self, var_num: int, input_num: int, dim: int,
+    def __init__(self, var_num: int, input_num: int, dim: int, dt: float,
                  need_bias: bool = False, minus: bool = False, other_items: str = ''):
         self.var_num = var_num
         self.dim = dim
+        self.dt = dt
         self.input_num = input_num
         self.minus = minus
         self.need_bias = need_bias
         self.fun_list, self.fun_dim = FeatureExtractor.analyticalExpression(other_items, var_num, dim)
+
+    def get_eps(self, data):
+        return 1e-6 * self.dt * np.max(data)
 
     def get_items(self, data, input_data, idx, max_dim=None):
         res = []

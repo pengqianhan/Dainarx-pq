@@ -45,9 +45,10 @@ class Node:
 
 class HybridAutomata:
     LoopWarning = True
+
     def __init__(self, mode_list, adj, init_mode=None):
         if init_mode is None:
-            self.mode_state = next(iter(adj.keys()))
+            self.mode_state = None
         else:
             self.mode_state = init_mode
         self.mode_list = mode_list

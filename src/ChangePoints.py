@@ -30,7 +30,7 @@ def find_change_point(data: np.array, input_data: np.array, get_feature, dt, w: 
     if merge_th is None:
         merge_th = w
 
-    eps = 1e-6 * dt * np.max(data)
+    eps = get_feature.get_eps(data)
 
     while pos + w < data.shape[1]:
         feature, now_err, fit_dim = get_feature(data[:, pos:(pos + w)], input_data[:, pos:(pos + w)])

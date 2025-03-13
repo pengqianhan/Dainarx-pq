@@ -18,6 +18,8 @@ class ModelFun:
 def build_system(data: list[Slice], res_adj: dict, get_feature):
     data_of_mode = {}
     for cur in data:
+        if not cur.valid:
+            continue
         if data_of_mode.get(cur.mode) is None:
             data_of_mode[cur.mode] = [[], []]
         data_of_mode[cur.mode][0].append(cur.data)

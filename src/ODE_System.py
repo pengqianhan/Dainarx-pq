@@ -47,6 +47,11 @@ class ODESystem:
                 res.append(eval("lambda t: " + expr))
         return res
 
+    def transExpr(self, expr):
+        dim_list, eq_list = ODESystem.analyticalExpression(self.var_list[0] + '[0] =' + expr, self.var_list)
+        return eq_list[0]
+
+
     def getInput(self, t=None):
         if t is None:
             t = self.now_time
@@ -131,10 +136,9 @@ class ODESystem:
                 if val == "":
                     continue
                 elif type(val) == str:
-                    self.state[i][j] = eval('lambda ' + prefix + ': ' + val)(*self.state[:, 0])
+                    self.state[i][j] = self.transExpr(val)(self.state)
                 else:
                     self.state[i][j] = float(reset_val[j])
-
 
 
 if __name__ == "__main__":

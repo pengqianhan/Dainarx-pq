@@ -133,7 +133,7 @@ class ODESystem:
                 elif type(val) == str:
                     self.state[i][j] = eval('lambda ' + prefix + ': ' + val)(*self.state[:, 0])
                 else:
-                    self.state[i][j] = float(reset_val[i])
+                    self.state[i][j] = float(reset_val[j])
 
 
 

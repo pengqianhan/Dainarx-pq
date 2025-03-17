@@ -82,24 +82,30 @@ class HybridAutomata:
     def next(self, *args):
         res = list(self.mode_list[self.mode_state].next(*args))
         mode_state = self.mode_state
-        via_list = {self.mode_state}
+        vis = set()
+        via_list = []
         is_cycle = False
         switched = False
         while True:
             fl = True
             for to, fun, reset_val in self.adj.get(self.mode_state, {}):
                 if fun(*res):
-                    self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
+                    # self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
                     self.mode_state = to
                     switched = True
-                    if to in via_list:
+                    if to in vis:
                         if HybridAutomata.LoopWarning:
                             print("warning: find loop!")
                         is_cycle = True
-                    via_list.add(to)
+                    vis.add(to)
+                    via_list.append((to, reset_val))
                     fl = False
                     break
             if fl or is_cycle:
+                if len(via_list) != 0:
+                    to, reset_val = via_list[0] if is_cycle else via_list[-1]
+                    self.mode_list[to].load(self.mode_list[mode_state], reset_val)
+                    self.mode_state = to
                 break
         return res, mode_state, switched
 

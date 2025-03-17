@@ -15,11 +15,17 @@
     "edge": [
       {
         "direction": "1 -> 2",
-        "condition": "abs(x) <= 0.8"
+        "condition": "abs(x) <= 0.8",
+        "reset": {
+          "x": ["", "x[1] * 0.95"]
+        }
       },
       {
         "direction": "2 -> 1",
-        "condition": "abs(x) >= 1.2"
+        "condition": "abs(x) >= 1.2",
+        "reset": {
+          "x": ["", "x[1] * 0.95"]
+        }
       }
     ]
   },

@@ -67,7 +67,7 @@ class Slice:
             warnings.warn("Find a invalid segmentation!")
             self.valid = False
 
-    def __init__(self, data, input_data, get_feature, isFront):
+    def __init__(self, data, input_data, get_feature, isFront, length):
         self.data = data
         self.input_data = input_data
         self.get_feature = get_feature
@@ -82,6 +82,7 @@ class Slice:
         self.mode = None
         self.isFront = isFront
         self.idx = None
+        self.length = length
 
     def setMode(self, mode):
         self.mode = mode
@@ -126,6 +127,6 @@ def slice_curve(cut_data, data, input_data, change_points, get_feature):
     for point in change_points:
         if point == 0:
             continue
-        cut_data.append(Slice(data[:, last:point], input_data[:, last:point], get_feature, last == 0))
+        cut_data.append(Slice(data[:, last:point], input_data[:, last:point], get_feature, last == 0, point - last))
         last = point
     return cut_data

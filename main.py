@@ -99,7 +99,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
         data_path = os.path.join(current_dir, data_path)
     for root, dirs, files in os.walk(data_path):
         print("Loading data!")
-        for file in sorted(files):
+        for file in sorted(files, key=lambda x: int(re.search(r'(\d+)', x).group())):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
             npz_file = np.load(os.path.join(root, file))

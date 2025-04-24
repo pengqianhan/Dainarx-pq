@@ -111,7 +111,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
             mode_list.append(mode_data_temp)
             input_list.append(npz_file['input'])
 
-    test_num = 2
+    test_num = 6
 
     print("Be running!")
     evaluation.submit(gt_chp=gt_list[test_num:])
@@ -159,7 +159,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
-    eval_log = main("./automata/non_linear/duffing.json")
+    eval_log = main("./automata/linear/loop.json")
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

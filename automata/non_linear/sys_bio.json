@@ -44,7 +44,6 @@
     "dim": 1,
     "need_bias": false,
     "other_items": "x[?] * x_[?]; x_[?]",
-    "kernel": "linear",
     "class_weight": 0.1
   }
 }

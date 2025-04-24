@@ -48,10 +48,8 @@
     "dt": 0.01,
     "total_time": 60.0,
     "dim": 1,
-    "need_bias": true,
     "need_reset": true,
     "other_items": "1 / x[?]",
-    "class_weight": 1,
     "svm_c": 1e5
   }
 }

@@ -53,7 +53,6 @@
     "dim": 2,
     "need_reset": true,
     "kernel": "rbf",
-    "other_items": "x[?] ** 3",
-    "class_weight": 1
+    "other_items": "x[?] ** 3"
   }
 }

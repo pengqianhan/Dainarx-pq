@@ -45,7 +45,6 @@
     "total_time": 10.0,
     "dim": 1,
     "need_bias": true,
-    "other_items": "x[?] * x[?]",
-    "class_weight": 1
+    "other_items": "x[?] * x[?]"
   }
 }

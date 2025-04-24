@@ -61,9 +61,6 @@
   "config": {
     "dt": 0.01,
     "total_time": 100.0,
-    "dim": 1,
-    "need_bias": true,
-    "other_items": "",
-    "class_weight": 1
+    "dim": 1
   }
 }

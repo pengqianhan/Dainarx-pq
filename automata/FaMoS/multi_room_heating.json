@@ -93,8 +93,6 @@
     "dt": 0.005 ,
     "total_time": 13.0,
     "dim": 1,
-    "need_bias": true,
-    "other_items": "",
     "kernel": "rbf",
     "window_size": 4,
     "class_weight": 0.1

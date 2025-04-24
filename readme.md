@@ -1,4 +1,6 @@
-# DAINARX
+# Dainarx
+
+Dainarx is a prototypical tool for the derivative-agnostic inference of nonlinear hybrid automata with high-order NARX-modeled dynamics from input-output discrete-time traces of hybrid systems.
 
 - Python 3.9
 
@@ -17,7 +19,7 @@ python main.py
 
 You can change the path in main.py to test different automata.
 
-If you want to test all the automata, run the following:
+If you want to test all the automata, run the following command:
 
 ```
 python test_all.py

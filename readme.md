@@ -7,10 +7,11 @@ Dainarx is a prototypical tool for the derivative-agnostic inference of nonlinea
 Install the dependencies:
 
 ```
-pip install numpy scikit-learn networkx
+pip install numpy scikit-learn networkx matplotlib
 ```
 
 "scikit-learn" is used for SVM learning, while "networkx" is only used to compute test metrics.
+"matplotlib" is used for plotting images.
 
 Run:
 ```

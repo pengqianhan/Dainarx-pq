@@ -1,4 +1,4 @@
-# Hybrid System Leaning
+# DAINARX
 
 - Python 3.9
 

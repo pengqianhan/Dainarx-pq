@@ -38,7 +38,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
         "id": 1,      // The id of the mode.
         "eq": "x1[1] = 1, x2[2] = -3 * x2[1] - 25 * x2[0] + u"
         // Eq represents the ode of each variable in this mode, separated by ','.
-        // Variables not defined in "var" and "input" cannot appear.
+        // Variables that are not defined in "var" and "input" cannot appear.
         // x[k] represents the KTH derivative of x. The input variable u directly represents the value of u.
         // The left side of the equal sign is the highest-order differential, and the right side is the expression. Implicit functions are not supported
         // ode must be provided for each variable.
@@ -51,7 +51,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
     "edge": [
       {
         "direction": "1 -> 2",  // The edge from mode u to mode v, represented as "u -> v".
-        "condition": "x1 >= 5", // Transition conditions.No variable undefined in var can occur.
+        "condition": "x1 >= 5", // Transition conditions. Variables that are not defined in "var" and "input" cannot appear.
         "reset": {              // Reset function.
           "x1": ["x1[0] - 1"]   // The representation structure is the same as "init_state", and the meaning of the expression is the same as "eq".
         }

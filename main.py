@@ -137,7 +137,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
         for i in range(config['dim'], data.shape[1]):
             state, mode, switched = sys.next(input_list[:, i])
             fit_data.append(state)
-            mode_data.append(mode_map_inv[mode])
+            mode_data.append(mode_map_inv.get(mode, -mode))
         fit_data = np.array(fit_data)
         evaluation.submit(mode_num=len(sys.mode_list))
         fit_data_list.append(np.transpose(fit_data))

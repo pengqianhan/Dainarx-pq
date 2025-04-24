@@ -16,6 +16,7 @@ python main.py
 ```
 
 You can change the path in main.py to test different automata.
+
 If you want to test all the automata, run the following:
 
 ```
@@ -52,7 +53,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
         "direction": "1 -> 2",  // The edge from mode u to mode v, represented as "u -> v".
         "condition": "x1 >= 5", // Transition conditions.No variable undefined in var can occur.
         "reset": {              // Reset function.
-          "x1": ["x1[0] - 1"]      // The representation structure is the same as "init_state", and the meaning of the expression is the same as "eq".
+          "x1": ["x1[0] - 1"]   // The representation structure is the same as "init_state", and the meaning of the expression is the same as "eq".
         }
       },
       {
@@ -65,12 +66,14 @@ The system will generate evaluation_log.csv in the root directory, recording all
     {
       "mode": 1,  // Initial mode
       "x1": [0],  // The initial state of x1, where "[a, b, c, ...]" represents the initial states of x1[0], x1[1], x1[2], and so on.
-      "x2": [0]   // If no initial state is provided, or if the number of initial states provided is insufficient for the order of the equation, zeros are automatically added backward.
+      "x2": [0],  // If no initial state is provided, or if the number of initial states provided is insufficient for the order of the equation, zeros are automatically added backward.
+      "u": "2 + 1.5 * sin(t)" // The expression of each input, a function related to t.
     },
     {
       "mode": 1,
       "x1": [2],
-      "x2": [3]
+      "x2": [3],
+      "u": "1 + sin(t)"
     }
   ],
   "config": {                   // Parameter List

@@ -61,8 +61,6 @@ class Evaluation:
 def max_min_abs_diff(a, b):
     sorted_b = sorted(b)
     max_diff = 0
-
-    # 处理a中的每个元素，找到在sorted_b中的最小差
     for x in a:
         pos = bisect.bisect_left(sorted_b, x)
         if pos == 0:

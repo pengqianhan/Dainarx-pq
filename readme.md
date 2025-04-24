@@ -33,7 +33,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
 - The json format of the automaton data is as follows.
 ```json5
 {
-  "automaton": {     // Automaton
+  "automaton": {      // Automaton
     "var": "x1, x2",  // List of output variables, separated by ','.
     "input": "u",     // List of input variables, separated by ','.
     "mode": [         // A list of automata modes.
@@ -82,7 +82,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
   "config": {                   // Parameter List
     "dt": 0.01,                 // Discrete time step, default is 0.01.
     "total_time": 10.0,         // Total sampling time, default is 10.
-    "order": 3,                   // Order of the difference equation, default is 3.
+    "order": 3,                 // Order of the difference equation, default is 3.
     "window_size": 10,          // Size of the sliding window, default is 10.
     "clustering_method": "fit", // Clustering method, default is "fit", options are "fit" and "dis".
     "minus": false,             // Whether to minimize the order, default is false.

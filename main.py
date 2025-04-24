@@ -61,7 +61,7 @@ def get_config(json_path, evaluation: Evaluation):
     else:
         with open(json_path) as f:
             json_file = json.load(f)
-            evaluation.submit(gt_mode_num=len(json_file.get('automation', {'mode': []})['mode']))
+            evaluation.submit(gt_mode_num=len(json_file.get('automaton', {'mode': []})['mode']))
             json_config = json_file.get('config', {})
             for (key, val) in default_config.items():
                 if key in json_config.keys():

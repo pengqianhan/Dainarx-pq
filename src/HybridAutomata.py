@@ -117,7 +117,7 @@ class HybridAutomata:
 if __name__ == "__main__":
     with open('../automata/test.json', 'r') as f:
         data = json.load(f)
-        sys = HybridAutomata.from_json(data['automation'])
+        sys = HybridAutomata.from_json(data['automaton'])
         res = []
         for i in range(1000):
             res.append(sys.next(0.01)[0])

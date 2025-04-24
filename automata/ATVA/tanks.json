@@ -1,5 +1,5 @@
 {
-  "automation": {
+  "automaton": {
     "var": "x1, x2",
     "input" : "u1",
     "mode": [

@@ -30,7 +30,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
 - The json format of the automaton data is as follows
 ```json5
 {
-  "automation": {     // Automaton
+  "automaton": {     // Automaton
     "var": "x1, x2",  // List of output variables, separated by ','.
     "input": "u",     // List of input variables, separated by ','.
     "mode": [         // A list of automata modes.

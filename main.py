@@ -129,7 +129,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
     init_state_test = get_init_state(data_test, mode_map, mode_list_test, config['dim'])
     fit_data_list, mode_data_list = [], []
-    draw_index = 0  # 为None则全画
+    draw_index = 0  # If it is None, draw all the test data
     for data, mode_list, input_list, init_state in zip(data_test, mode_list_test, input_list_test, init_state_test):
         fit_data = [data[:, i] for i in range(config['dim'])]
         mode_data = list(mode_list[:config['dim']])

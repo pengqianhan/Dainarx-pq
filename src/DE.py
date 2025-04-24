@@ -6,6 +6,8 @@ from math import *
 import matplotlib.pyplot as plt
 import re
 
+# The file is deprecated
+
 
 class ODE:
     @staticmethod

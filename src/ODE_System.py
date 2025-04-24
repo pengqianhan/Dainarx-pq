@@ -25,15 +25,15 @@ class ODESystem:
             return var_list.index(match.group(1)), int(match.group(2))
 
         res = [(lambda x: 0) for _ in var_list]
-        dim_list = [0 for _ in var_list]
+        order_list = [0 for _ in var_list]
         expr_list = expr_list.split(',')
         for expr in expr_list:
             var_expr, eq_expr = expr.split('=')
             eq_expr = re.sub(pattern, repl, eq_expr)
-            idx, dim = get_info(var_expr)
+            idx, order = get_info(var_expr)
             res[idx] = eval(f"lambda x{input_expr}: " + eq_expr)
-            dim_list[idx] = dim
-        return dim_list, res
+            order_list[idx] = order
+        return order_list, res
 
     def analyticalInput(self, input_expr=None):
         res = []
@@ -48,7 +48,7 @@ class ODESystem:
         return res
 
     def transExpr(self, expr):
-        dim_list, eq_list = ODESystem.analyticalExpression(self.var_list[0] + '[0] =' + expr, self.var_list)
+        order_list, eq_list = ODESystem.analyticalExpression(self.var_list[0] + '[0] =' + expr, self.var_list)
         return eq_list[0]
 
 
@@ -63,15 +63,15 @@ class ODESystem:
             init_state = []
         if input_list is None:
             input_list = []
-        dim_list, eq_list = ODESystem.analyticalExpression(expr_list, var_list, input_list)
+        order_list, eq_list = ODESystem.analyticalExpression(expr_list, var_list, input_list)
         self.var_list = var_list
         self.input_list = input_list
-        self.dim_list = dim_list
+        self.order_list = order_list
         self.eq_list = eq_list
         self.var_num = len(eq_list)
         self.state = init_state.copy()
         self.init_state = init_state.copy()
-        self.max_dim = max(self.dim_list)
+        self.max_order = max(self.order_list)
         self.method = method
         self.fit_state_size()
         self.input_fun_list = self.analyticalInput()
@@ -79,16 +79,16 @@ class ODESystem:
         self.reset_val = {}
 
     def fit_state_size(self):
-        state = np.zeros((self.var_num, self.max_dim)).astype(np.float64)
+        state = np.zeros((self.var_num, self.max_order)).astype(np.float64)
         for idx_var in range(min(self.var_num, len(self.state))):
-            for idx_dim in range(min(self.dim_list[idx_var], len(self.state[idx_var]))):
-                state[idx_var][idx_dim] = self.state[idx_var][idx_dim]
+            for idx_order in range(min(self.order_list[idx_var], len(self.state[idx_var]))):
+                state[idx_var][idx_order] = self.state[idx_var][idx_order]
         self.state = state
 
     def rk_fun(self, y, t):
         res = np.roll(y, -1, axis=1)
         for idx in range(self.var_num):
-            res[idx][self.dim_list[idx] - 1] = self.eq_list[idx](y, *self.getInput(t))
+            res[idx][self.order_list[idx] - 1] = self.eq_list[idx](y, *self.getInput(t))
         return res
 
     def next(self, dT: float):
@@ -101,7 +101,7 @@ class ODESystem:
         else:
             for idx_var in range(self.var_num):
                 last_d = self.eq_list[idx_var](self.state)
-                for i in range(self.dim_list[idx_var] - 1, -1, -1):
+                for i in range(self.order_list[idx_var] - 1, -1, -1):
                     self.state[idx_var][i] = self.state[idx_var][i] + dT * last_d
                     last_d = self.state[idx_var][i]
         self.now_time += dT
@@ -131,7 +131,7 @@ class ODESystem:
         for i in range(len(self.var_list)):
             var = self.var_list[i]
             reset_val = reset_dict.get(var, [])
-            for j in range(min(len(reset_val), self.max_dim)):
+            for j in range(min(len(reset_val), self.max_order)):
                 val = reset_val[j]
                 if val == "":
                     continue

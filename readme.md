@@ -79,7 +79,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
   "config": {                   // Parameter List
     "dt": 0.01,                 // Discrete time step, default is 0.01.
     "total_time": 10.0,         // Total sampling time, default is 10.
-    "dim": 3,                   // Order of the difference equation, default is 3.
+    "order": 3,                   // Order of the difference equation, default is 3.
     "window_size": 10,          // Size of the sliding window, default is 10.
     "clustering_method": "fit", // Clustering method, default is "fit", options are "fit" and "dis".
     "minus": false,             // Whether to minimize the order, default is false.
@@ -88,7 +88,7 @@ The system will generate evaluation_log.csv in the root directory, recording all
     "other_items": "",          // Other nonlinear or cross terms in the difference equation, default is empty.
     "svm_c": 1e6,               // SVM parameter C, default is 1e6.
     "self_loop": false,         // Whether self-loops are allowed, default is false.
-    "need_reset": false,        // Whether to learn reset, default is false; recommended to enable if dim > 1.
+    "need_reset": false,        // Whether to learn reset, default is false; recommended to enable if order > 1.
     "class_weight": 1.0         // Weight of negative samples in SVM (positive sample = 1.0), default is 1.0.
 
     // Explanation of other_items:
@@ -96,11 +96,11 @@ The system will generate evaluation_log.csv in the root directory, recording all
     // Expressions are separated by semicolons (;)
     // The part before the colon (:) defines the scope of the expression; "xi" means it applies to the i-th variable (starting from 0). If no scope is provided, it applies to all variables.
     // "x" refers to the variable itself, "x_" refers to any other variable except itself, "xi" refers to the i-th variable
-    // "x[1]" means x[t - 1], "x[a]" means x[t - a], representing past values in the difference equation. Terms with lag greater than dim or zero are not allowed.
-    // "x[?]" represents any lag term in the range [1, dim]
+    // "x[1]" means x[t - 1], "x[a]" means x[t - a], representing past values in the difference equation. Terms with lag greater than order or zero are not allowed.
+    // "x[?]" represents any lag term in the range [1, order]
 
     // Example:
-    // dim = 2, other_items = "x0, x2: x[1] * x_[?]"
+    // order = 2, other_items = "x0, x2: x[1] * x_[?]"
     // For x0, the following additional terms will be fitted:
     //   x0[1] * x1[1], x0[1] * x1[2], x0[1] * x2[1], x0[1] * x2[2]
     // For x1, no additional terms will be fitted

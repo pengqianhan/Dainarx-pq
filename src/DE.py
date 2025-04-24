@@ -15,8 +15,8 @@ class ODE:
         general = re.sub(val_name, 'x', expr)
         prefix = re.sub("=(.)*", "", general)
         suffix = re.sub("(.)*=", "", general)
-        dim = int(re.findall(r'\d+', prefix)[0])
-        return dim, suffix
+        order = int(re.findall(r'\d+', prefix)[0])
+        return order, suffix
 
     def __init__(self, eq: str, init_state=None, var_name='x', method='e'):
         r"""
@@ -29,8 +29,8 @@ class ODE:
         :param init_state:
             The initial state of the variable,
             init_state[k] represents the initial state of the k derivative of the variable.
-            The default value is 0 for all dimensions.
-            If the number of dimensions is less than +1, 0 is filled backward.
+            The default value is 0 for all orderensions.
+            If the number of orderensions is less than +1, 0 is filled backward.
         :param var_name:
             The name of the variable in the expression, default is 'x'.
         """
@@ -38,8 +38,8 @@ class ODE:
             init_state = []
 
         try:
-            dim, expr = ODE.analyticalExpression(eq, var_name)
-            self.dim = dim
+            order, expr = ODE.analyticalExpression(eq, var_name)
+            self.order = order
             self.eq = eval("lambda x: " + expr)
             self.state = np.array(init_state).astype(np.float64)
             self.fit_state_size()
@@ -51,11 +51,11 @@ class ODE:
         self.init_state = self.state.copy()
 
     def fit_state_size(self):
-        self.state = np.resize(self.state, (self.dim,)).astype(np.float64)
+        self.state = np.resize(self.state, (self.order,)).astype(np.float64)
 
     def rk_fun(self, y):
         res = np.roll(y, -1)
-        res[self.dim - 1] = self.eq(y)
+        res[self.order - 1] = self.eq(y)
         return res
 
     def next(self, dT: float):
@@ -67,7 +67,7 @@ class ODE:
             self.state = self.state + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
         else:
             last_d = self.eq(self.state)
-            for i in range(self.dim - 1, -1, -1):
+            for i in range(self.order - 1, -1, -1):
                 self.state[i] = self.state[i] + dT * last_d
                 last_d = self.state[i]
         return self.state[0]
@@ -104,23 +104,23 @@ class DE:
         self.state = deque(init_state)
         self.eq = eq.copy()
         self.fun_list = DE.analyticalExpression(other_item)
-        self.dim = len(eq) - len(self.fun_list) - int(has_bias)
+        self.order = len(eq) - len(self.fun_list) - int(has_bias)
         self.has_bias = has_bias
         self.fit_state_size()
 
     def fit_state_size(self):
-        while len(self.state) > self.dim:
+        while len(self.state) > self.order:
             self.state.pop()
-        while len(self.state) < self.dim:
+        while len(self.state) < self.order:
             self.state.append(0)
 
     def next(self):
         val = 0
-        for i in range(self.dim):
+        for i in range(self.order):
             val += self.state[i] * self.eq[i]
         self.state.appendleft(0)
         for fun_idx in range(len(self.fun_list)):
-            k = self.eq[fun_idx + self.dim]
+            k = self.eq[fun_idx + self.order]
             val += self.fun_list[fun_idx](self.state) * k
             fun_idx += 1
         if self.has_bias:

@@ -44,7 +44,7 @@
   "config": {
     "dt": 0.001,
     "total_time": 1,
-    "dim": 1,
+    "order": 1,
     "other_items": "x_[?]; sin(x[?]); sin(x_[?])",
     "kernel": "rbf"
   }

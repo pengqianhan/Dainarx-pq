@@ -33,9 +33,9 @@ class Slice:
         feature1 = data1.feature
         feature2 = data2.feature
         assert len(feature1) == len(feature2)
-        _, err, fit_dim = get_feature([data1.data, data2.data],
+        _, err, fit_order = get_feature([data1.data, data2.data],
                                       [data1.input_data, data2.input_data], is_list=True)
-        if fit_dim <= max(data1.fit_dim, data2.fit_dim):
+        if fit_order <= max(data1.fit_order, data2.fit_order):
             Slice.FitErrorThreshold = min(Slice.FitErrorThreshold, max(err) * Slice.ToleranceRatio)
             Slice.FitErrorThreshold = max(Slice.FitErrorThreshold, 1e-6)
         while len(Slice.RelativeErrorThreshold) < len(feature1):
@@ -72,11 +72,11 @@ class Slice:
         self.input_data = input_data
         self.get_feature = get_feature
         self.valid = True
-        if len(data[0]) > get_feature.dim:
-            self.feature, err, self.fit_dim = get_feature(data, input_data)
+        if len(data[0]) > get_feature.order:
+            self.feature, err, self.fit_order = get_feature(data, input_data)
             self.err = np.max(err)
         else:
-            self.feature, self.err, self.fit_dim = [], 1e6, []
+            self.feature, self.err, self.fit_order = [], 1e6, []
         if not self.valid:
             warnings.warn("warning: find a invalid segmentation!")
         self.mode = None
@@ -88,20 +88,20 @@ class Slice:
         self.mode = mode
 
     def test_set(self, other_list):
-        data, input_data, other_fit_dim = [], [], None
+        data, input_data, other_fit_order = [], [], None
         for s in other_list:
             data.append(s.data)
             input_data.append(s.input_data)
-            if other_fit_dim is None:
-                other_fit_dim = copy.copy(s.fit_dim)
+            if other_fit_order is None:
+                other_fit_order = copy.copy(s.fit_order)
             else:
-                other_fit_dim = min(other_fit_dim, s.fit_dim)
+                other_fit_order = min(other_fit_order, s.fit_order)
 
-        _, err, fit_dim = self.get_feature([self.data] + data, [self.input_data] + input_data, is_list=True)
-        dim_condition = True
-        for i in range(len(fit_dim)):
-            dim_condition = dim_condition and fit_dim[i] <= max(self.fit_dim[i], other_fit_dim[i])
-        return dim_condition and max(err) < Slice.FitErrorThreshold
+        _, err, fit_order = self.get_feature([self.data] + data, [self.input_data] + input_data, is_list=True)
+        order_condition = True
+        for i in range(len(fit_order)):
+            order_condition = order_condition and fit_order[i] <= max(self.fit_order[i], other_fit_order[i])
+        return order_condition and max(err) < Slice.FitErrorThreshold
 
     def __and__(self, other):
         if Slice.Method == 'dis':
@@ -114,12 +114,12 @@ class Slice:
                 idx += 1
             return True
         else:
-            _, err, fit_dim = self.get_feature([self.data, other.data],
+            _, err, fit_order = self.get_feature([self.data, other.data],
                                                [self.input_data, other.input_data], is_list=True)
-            dim_condition = True
-            for i in range(len(fit_dim)):
-                dim_condition = dim_condition and fit_dim[i] <= max(self.fit_dim[i], other.fit_dim[i])
-            return dim_condition and max(err) < Slice.FitErrorThreshold
+            order_condition = True
+            for i in range(len(fit_order)):
+                order_condition = order_condition and fit_order[i] <= max(self.fit_order[i], other.fit_order[i])
+            return order_condition and max(err) < Slice.FitErrorThreshold
 
 
 def slice_curve(cut_data, data, input_data, change_points, get_feature):

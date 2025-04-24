@@ -20,13 +20,13 @@ class DESystem:
         self.reset_fun = reset_fun
 
     def fit_state_size(self):
-        state = [deque(0 for _ in range(self.config.dim)) for _ in range(self.var_num)]
-        input_data = [deque(0 for _ in range(self.config.dim)) for _ in range(self.config.input_num)]
+        state = [deque(0 for _ in range(self.config.order)) for _ in range(self.var_num)]
+        input_data = [deque(0 for _ in range(self.config.order)) for _ in range(self.config.input_num)]
         for i in range(min(len(self.state), self.var_num)):
-            for j in range(min(len(self.state[i]), self.config.dim)):
+            for j in range(min(len(self.state[i]), self.config.order)):
                 state[i][j] = self.state[i][j]
         for i in range(min(len(self.input_data), self.config.input_num)):
-            for j in range(min(len(self.input_data[i]), self.config.dim)):
+            for j in range(min(len(self.input_data[i]), self.config.order)):
                 input_data[i][j] = self.input_data[i][j]
         self.state = state
         self.input_data = input_data

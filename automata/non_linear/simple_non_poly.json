@@ -47,7 +47,7 @@
   "config": {
     "dt": 0.01,
     "total_time": 60.0,
-    "dim": 1,
+    "order": 1,
     "need_reset": true,
     "other_items": "1 / x[?]",
     "svm_c": 1e5

@@ -61,6 +61,6 @@
   "config": {
     "dt": 0.01,
     "total_time": 100.0,
-    "dim": 1
+    "order": 1
   }
 }

@@ -39,7 +39,7 @@
   "config": {
     "dt": 0.01,
     "total_time": 10.0,
-    "dim": 1,
+    "order": 1,
     "need_reset": true,
     "other_items": "x_[?]",
     "self_loop": true

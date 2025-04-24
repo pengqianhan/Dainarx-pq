@@ -43,7 +43,7 @@
   "config": {
     "dt": 0.01,
     "total_time": 10,
-    "dim": 1,
+    "order": 1,
     "other_items": "x_[?]",
     "class_weight": 0.1
   }

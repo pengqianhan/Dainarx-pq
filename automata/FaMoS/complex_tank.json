@@ -156,7 +156,7 @@
   "config": {
     "dt": 0.005,
     "total_time": 20.0,
-    "dim": 1,
+    "order": 1,
     "window_size": 4,
     "class_weight": 0.1,
     "svm_c": 1e3

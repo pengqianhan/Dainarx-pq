@@ -23,7 +23,7 @@ from src.HybridAutomata import HybridAutomata
 def run(data_list, input_data, config, evaluation: Evaluation):
     input_data = np.array(input_data)
     get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
-                                   dim=config['dim'], dt=config['dt'], minus=config['minus'],
+                                   order=config['order'], dt=config['dt'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
     Slice.clear()
     slice_data = []
@@ -52,7 +52,7 @@ def get_config(json_path, evaluation: Evaluation):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(json_path):
         json_path = os.path.join(current_dir, json_path)
-    default_config = {'dt': 0.01, 'total_time': 10, 'dim': 3, 'window_size': 10, 'clustering_method': 'fit',
+    default_config = {'dt': 0.01, 'total_time': 10, 'order': 3, 'window_size': 10, 'clustering_method': 'fit',
                       'minus': False, 'need_bias': True, 'other_items': '', 'kernel': 'linear', 'svm_c': 1e6,
                       'class_weight': 1.0, 'need_reset': False, 'self_loop': False}
     config = {}
@@ -127,14 +127,14 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     mode_list_test = mode_list[:test_num]
     input_list_test = input_list[:test_num]
 
-    init_state_test = get_init_state(data_test, mode_map, mode_list_test, config['dim'])
+    init_state_test = get_init_state(data_test, mode_map, mode_list_test, config['order'])
     fit_data_list, mode_data_list = [], []
     draw_index = 0  # If it is None, draw all the test data
     for data, mode_list, input_list, init_state in zip(data_test, mode_list_test, input_list_test, init_state_test):
-        fit_data = [data[:, i] for i in range(config['dim'])]
-        mode_data = list(mode_list[:config['dim']])
-        sys.reset(init_state, input_list[:, :config['dim']])
-        for i in range(config['dim'], data.shape[1]):
+        fit_data = [data[:, i] for i in range(config['order'])]
+        mode_data = list(mode_list[:config['order']])
+        sys.reset(init_state, input_list[:, :config['order']])
+        for i in range(config['order'], data.shape[1]):
             state, mode, switched = sys.next(input_list[:, i])
             fit_data.append(state)
             mode_data.append(mode_map_inv.get(mode, -mode))

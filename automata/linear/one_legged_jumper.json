@@ -44,7 +44,7 @@
   "config": {
     "dt": 0.01,
     "total_time": 5.0,
-    "dim": 1,
+    "order": 1,
     "other_items": "x0:x2[?]; x1:x3[?]"
   }
 }

@@ -148,9 +148,11 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
                 plt.plot(np.arange(len(data[var_idx])), data[var_idx], color='c')
                 plt.plot(np.arange(fit_data.shape[0]), fit_data[:, var_idx], color='r')
                 plt.show()
+                plt.savefig(os.path.join(result_path, "plot_data.png"))
             plt.plot(np.arange(len(mode_list)), mode_list, color='c')
             plt.plot(np.arange(len(mode_data)), mode_data, color='r')
             plt.show()
+            plt.savefig(os.path.join(result_path, "plot_mode.png"))
         if draw_index is not None:
             draw_index -= 1
     evaluation.submit(fit_mode=mode_data_list, fit_data=np.array(fit_data_list),
@@ -159,7 +161,15 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
 
 
 if __name__ == "__main__":
+    result_path = "result"
+    # check if the result folder exists if not, creat it
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
+    
     eval_log = main("./automata/non_linear/duffing.json")
+
+    with open(os.path.join(result_path, "eval_log.json"), "w") as f:
+        json.dump(eval_log, f)
     print("Evaluation log:")
     for key_, val_ in eval_log.items():
         print(f"{key_}: {val_}")

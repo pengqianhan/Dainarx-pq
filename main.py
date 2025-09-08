@@ -22,6 +22,9 @@ from src.HybridAutomata import HybridAutomata
 
 def run(data_list, input_data, config, evaluation: Evaluation):
     input_data = np.array(input_data)
+    # print('len(data_list[0]): ', len(data_list[0]))#var_num=1
+    # print('len(input_data[0]): ', len(input_data[0]))#input_num=1
+    # print('input_data.shape: ', input_data.shape)#(9,1, 1000)
     get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
                                    order=config['order'], dt=config['dt'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
@@ -117,6 +120,8 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     evaluation.submit(gt_chp=gt_list[test_num:])
     evaluation.submit(train_mode_list=mode_list[test_num:])
     evaluation.start()
+    # print('len(data): ', len(data))#15
+    # print('len(input_list): ', len(input_list))#15
     sys, slice_data = run(data[test_num:], input_list[test_num:], config, evaluation)
     print(f"mode number: {len(sys.mode_list)}")
     print("Start simulation")

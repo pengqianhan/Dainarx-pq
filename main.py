@@ -21,10 +21,12 @@ from src.HybridAutomata import HybridAutomata
 
 
 def run(data_list, input_data, config, evaluation: Evaluation):
-    input_data = np.array(input_data)
+    # print("len(data_list): ", len(data_list)) #9
+    # print("len(input_data): ", len(input_data)) #9 
+    input_data = np.array(input_data)#shape: (9, 1, 1000)
     # print('len(data_list[0]): ', len(data_list[0]))#var_num=1
     # print('len(input_data[0]): ', len(input_data[0]))#input_num=1
-    # print('input_data.shape: ', input_data.shape)#(9,1, 1000)
+    # print('input_data.shape: ', input_data.shape)#(9,1,1000)
     get_feature = FeatureExtractor(len(data_list[0]), len(input_data[0]),
                                    order=config['order'], dt=config['dt'], minus=config['minus'],
                                    need_bias=config['need_bias'], other_items=config['other_items'])
@@ -101,11 +103,19 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     if not os.path.isabs(data_path):
         data_path = os.path.join(current_dir, data_path)
     for root, dirs, files in os.walk(data_path):
+        # print("root: ", root)#path/data
+        # print("dirs: ", dirs)#[]
+        # print("files: ", files)#['test_data0.npz', 'test_data1.npz',..., 'test_data14.npz']
         print("Loading data!")
         for file in sorted(files, key=lambda x: int(re.search(r'(\d+)', x).group())):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
-            npz_file = np.load(os.path.join(root, file))
+            npz_file = np.load(os.path.join(root, file))# e.g. test_data14.npz
+            # print("npz_file.keys(): ", npz_file.keys()) # ['state', 'mode', 'input', 'change_points']
+            # print("npz_file['state'].shape: ", npz_file['state'].shape) # (1, 10001)
+            # print("npz_file['mode'].shape: ", npz_file['mode'].shape) # (10001, 1)
+            # print("npz_file['input'].shape: ", npz_file['input'].shape) # (1, 10001)
+            # print("npz_file['change_points'].shape: ", npz_file['change_points'].shape) # (23,)
             state_data_temp, mode_data_temp = npz_file['state'], npz_file['mode']
             change_point_list = npz_file.get('change_points', get_ture_chp(mode_data_temp))
             gt_list.append(change_point_list)
@@ -117,11 +127,13 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     test_num = 6
 
     print("Be running!")
+    # print("len(gt_list): ", len(gt_list))#15
+    # print("len(mode_list): ", len(mode_list))#15
+    # print("len(input_list): ", len(input_list))#15
+    # print("len(data): ", len(data))#15
     evaluation.submit(gt_chp=gt_list[test_num:])
     evaluation.submit(train_mode_list=mode_list[test_num:])
     evaluation.start()
-    # print('len(data): ', len(data))#15
-    # print('len(input_list): ', len(input_list))#15
     sys, slice_data = run(data[test_num:], input_list[test_num:], config, evaluation)
     print(f"mode number: {len(sys.mode_list)}")
     print("Start simulation")

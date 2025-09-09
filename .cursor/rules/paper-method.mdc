@@ -1,0 +1,106 @@
+---
+description: The methodology section of the paper
+globs:
+alwaysApply: true
+---
+
+### **3 Problem Formulation**
+
+This section first recaps the basics of hybrid systems characterized by hybrid automata and NARX models and then formulates our problem of identifying hybrid systems from time-discrete traces.
+
+*Notations.* We denote by $\mathbb{N}$, $\mathbb{N}_{>0}$, $\mathbb{R}$, and $\mathbb{R}_{>0}$ the set of natural, positive natural, real, and positive real numbers, respectively; let $\overline{\mathbb{R}}_{\ge 0} \equiv \mathbb{R}_{>0} \cup \{\infty\}$. $X \cup Y$ denotes the disjoint union of sets X and Y. Given matrix A, we denote by $A_{ij}$, $A_{i,:}$, and $A_{:,j}$ respectively the (i, j)-th element, the i-th row vector, and the j-th column vector of A. For $n \in \mathbb{N}_{>0}$ and $T \in \overline{\mathbb{R}}_{\ge 0}$, an n-dimensional (continuous) signal $\sigma: [0, T) \to \mathbb{R}^n$ is a function that maps each timepoint in the domain $[0, T)$ to an n-dimensional real-valued vector in $\mathbb{R}^n$; a signal is discrete if its time domain consists of discrete timestamps.
+
+#### **3.1 Hybrid Automata**
+Hybrid automata are a widely adopted formalism to characterize the discrete-continuous behaviors of hybrid systems. It extends finite-state machines by associating each discrete location with a vector of continuously evolving dynamics subject to discrete jumps upon transitions.
+
+**Definition 2 (Hybrid Automaton).** An n-dimensional hybrid automaton is a sextuple
+$H \triangleq (Q, V, F, \text{Inv}, \text{Init}, \mathcal{T})$ where
+*   $Q = \{q_1, q_2, \dots, q_J\}$ is a finite set of discrete modes representing the discrete states of $H$.
+*   $V = X \oplus U$ is a finite set of continuous variables consisting of (observable) output variables $X = \{x_1, x_2, \dots, x_n\}$ and (controllable) input variables $U = \{u_1, u_2, \dots, u_m\}$. A real-valued vector $\mathbf{v} = (x_1, x_2, \dots, x_n, u_1, u_2, \dots, u_m) \in \mathbb{R}^{n+m}$ denotes a continuous state. The overall state space of $H$ is $Q \times \mathbb{R}^{n+m}$, i.e., the Cartesian product of the discrete and continuous state space. We denote by $\vec{x} = \mathbf{v}|_X$ and $\vec{u} = \mathbf{v}|_U$ the projection of $\mathbf{v}$ onto the output and input space, respectively.
+*   $\mathcal{F} = \{F_q\}_{q \in Q}$ assigns to each mode $q \in Q$ a flow function $F_q$ characterizing the change of output variables $X$ over inputs $U$; Detailed forms of $F_q$ are specified below.
+*   $\text{Inv} \subseteq Q \times \mathbb{R}^{n+m}$ specifies the mode invariants representing admissible states of $H$; We denote by $\text{Inv}(q) = \{\mathbf{v} | (q, \mathbf{v}) \in \text{Inv}\}$ the invariant of mode $q \in Q$.
+*   $\text{Init} \subseteq \text{Inv}$ is the initial condition defining admissible initial states of $H$.
+*   $\mathcal{T} \subseteq Q \times G \times R \times Q$ is the set of transition relations between modes, where $G$ is a set of guards $g \subseteq \mathbb{R}^{n+m}$ and $R$ is a set of resets (aka, updates) $r: \mathbb{R}^{n+m} \to \mathbb{R}^n$. A transition $e = (q, g, r, q') \in \mathcal{T}$ is triggered immediately when $g$ is active, i.e., $\mathbf{v} \in g$ (à la the synchronous semantics in); The output state vector $\vec{x}$ is updated to $r(\mathbf{v})$ upon taking this transition.
+
+The flow dynamics of a hybrid automaton $H$ within mode $q$ is typically modeled by a system of (potentially high-order) ordinary differential equations (ODEs) of the form
+$$
+\vec{x}^{(k)} = F_q(\vec{x}, \vec{x}^{(1)}, \dots, \vec{x}^{(k-1)}, \vec{u}),
+\quad (1)
+$$
+where $k \in \mathbb{N}$ is the order of the ODE and $\vec{x}^{(i)} = d^{(i)}\vec{x}/dt^i$ is the i-th order derivative of $\vec{x}$ w.r.t. time $t$ ($0 \le i \le k$).
+
+We infer hybrid system models where the flow dynamics $F$ is represented using nonlinear autoregressive exogenous (NARX) models — a commonly used formalism in the identification of (nonlinear) hybrid systems – for fitting discrete-time traces.
+
+#### **3.2 NARX Models**
+We forge the flow dynamics $\mathcal{F} = \{F_q\}_{q \in Q}$ using (a system of) NARX models: The dynamics of each mode is represented by a nonlinear ARX model in the form of a k-th order difference equation:
+$$
+\vec{x}[\tau] = F_q(\vec{x}[\tau-1], \vec{x}[\tau-2], \dots, \vec{x}[\tau-k], \vec{u}[\tau]), \quad \text{for } \tau \ge k,
+\quad (3)
+$$
+where the current output vector $\vec{x}[\tau] \in \mathbb{R}^n$ is determined by its k recent history states as well as the current input vector $\vec{u}[\tau] \in \mathbb{R}^m$ through a nonlinear function $F_q: \mathbb{R}^{k \times n} \times \mathbb{R}^m \to \mathbb{R}^n$.
+
+This gives rise to an equivalent form of the NARX model (3) as
+$$
+\vec{x}[\tau] = \sum_{i=1}^\alpha \vec{a}_i \circ f_i(\vec{x}[\tau-1], \dots, \vec{x}[\tau-k], \vec{u}[\tau]) + \sum_{i=1}^k B_i \cdot \vec{x}[\tau-i] + B_{k+1} \cdot \vec{u}[\tau] + \vec{c},
+\quad (4)
+$$
+where $f_1, f_2, \dots, f_\alpha$ are arbitrary vector-valued nonlinear components in $\mathbb{R}^n$ representing the model structure of $F_q$; $\vec{a}_i, \vec{c} \in \mathbb{R}^n$ are vector coefficients and $B_i \in \mathbb{R}^{n \times n}$, $B_{k+1} \in \mathbb{R}^{n \times m}$ are matrix coefficients; $\cdot$ denotes matrix multiplication and $\circ$ denotes the Hadamard product, i.e., $(A_1 \circ A_2)_{ij} = (A_1)_{ij}(A_2)_{ij}$.
+
+> **Problem Statement.** Given a set of finite discrete-time traces $\{\xi_j\}_{1 \le j \le m}$ as per (2) sampled from a hybrid automaton $H$ and a template NARX model $N = (\mathcal{A}, \{f_i\}_{1 \le i \le \alpha})$, identify a hybrid automaton $\hat{H}$ where all mode dynamics are instances of $N$ such that, for any trace $\xi_j$, there exists a finite discrete-time trace $\zeta$ of $\hat{H}$ satisfying $\zeta(\tau) = \mathbf{v}_\tau$ for all $0 \le \tau \le l$.
+
+### **4 Derivative-Agnostic Inference**
+This section presents our derivative-agnostic approach DAINARX for inferring hybrid systems with NARX-modeled dynamics from discrete-time input-output traces. DAINARX follows the common pipeline of hybrid system identification including (I) **Trace segmentation**, (II) **Segment clustering**, (III) **Mode characterization**, (IV) **Guard learning**, and (V) **Reset learning**.
+
+The main technical novelty of DAINARX lies in Steps (I), (II) and (V), and, in particular, we employ NARX model fitting as the basis throughout Steps (I), (II), (III), and (V), which aims to fit one or more trace segments using a NARX model.
+
+#### **4.1 NARX Model Fitting**
+Given a template NARX model $N = (\mathcal{A}, \{f_i\}_{1 \le i \le \alpha})$ and a set $S = \{\xi_j\}_{1 \le j \le m}$ of finite discrete-time traces or trace segments, the task of NARX model fitting asks to find an instance $N = N[\Lambda] \in \langle N \rangle$, if it exists, such that $N$ fits $S$:
+
+**Definition 5 (Trace Fitting).** Let $\xi$ be a finite discrete-time trace of hybrid automaton $H$. We say that a k-th order NARX model $N$ fits $\xi$, denoted by $N \models \xi$, if (4) holds by substituting $\mathbf{v}_\tau|_X$ and $\mathbf{v}_\tau|_U$ in $\mathbf{v}$ respectively for $\vec{x}[\tau]$ and $\vec{u}[\tau]$. $N$ fits a set $S = \{\xi_j\}$ of such trace (segments) if $N \models \xi_j$ for all $\xi_j$ in S. We say S is fittable by a template NARX model $N$ if there exists $N \in \langle N \rangle$ such that $N \models S$.
+
+We address this task by the linear least squares method (LLSQ) as established in the field of regression analysis: We find the best-fitting NARX coefficients $\Lambda$ to $\xi$ by minimizing the sum of the squares of the “offsets” of data points on $\xi$ from $N[\Lambda]$, i.e.,
+$$
+\underset{\Lambda_{i,:}}{\text{minimize}} \quad ||O_{i,:} - \Lambda_{i,:} \cdot D_i||_2^2 \quad \text{for } i = 1, 2, \dots, n
+\quad (5)
+$$
+where $||\cdot||_2$ is the $L^2$-norm; $O \in \mathbb{R}^{n \times (l-k+1)}$ and $D_i \in \mathbb{R}^{(a+kn+m+1) \times (l-k+1)}$ are respectively the observed value matrix and the data matrix (with respect to the i-th row of $\Lambda$).
+
+#### **4.2 Trace Segmentation**
+Given the learning data $D = \{\xi_j\}_{1 \le j \le M}$, the initial step of DAINARX is to partition every discrete-time trace in $D$ into trace segments such that the neighboring segments are generated by different mode dynamics. We identify a set of timestamps featuring the following changepoint property:
+
+**Property 9 (Changepoints).** Given a discrete-time trace $\xi = ((t_0, \mathbf{v}_0), (t_0 + \Delta t, \mathbf{v}_1), \dots, (t_0 + l\Delta t, \mathbf{v}_l))$ and a template NARX model $N$. Let $CP = \{p_0, p_1, \dots, p_s\} \in \mathbb{N}^s$ be a set of timestamps with $0 = p_0 < p_1 < p_2 < \dots < p_s = l+1$. We say $CP$ is the (unique) set of changepoints w.r.t. $\xi$ and $N$ if it satisfies
+(i) $\xi_{p_i, p_{i+1}}$ is fittable by $N$ for any $0 \le i < s$; and
+(ii) $\xi_{p_i, (p_{i+1})+1}$ is not fittable by $N$ for any $0 \le i < s-1$.
+
+#### **4.3 Segment Clustering**
+The goal of segment clustering is to group the trace segments obtained through segmentation into several clusters such that each cluster includes all segments that are deemed to be generated by the same mode dynamics. In contrast to existing approaches, DAINARX employs a threshold-free method based on NARX model fitting. We start by defining a simple criterion called *mergeable*:
+
+**Definition 11 (Mergeable Traces).** A set S of discrete-time trace segments is mergeable w.r.t. the template NARX model $N$ if there exists $N \in \langle N \rangle$ such that $N \models S$.
+
+DAINARX provides a less aggressive merging criterion called *minimally mergeable*:
+
+**Definition 13 (Minimally Mergeable Traces).** Given a set S of discrete-time trace segments. Let $k_S = \text{min}\{k \in \mathbb{N} | k \text{ is the order of } N \in \langle N \rangle \text{ such that } N \models S\}$ be the minimal order of NARX models that fit S under template N. Then, S is minimally mergeable w.r.t. N if $k_S = k_{\{\xi\}}$ for any $\xi \in S$.
+
+#### **4.4 Mode Characterization**
+Given the clustered trace segments $Seg_D = S_1 \oplus S_2 \oplus \dots \oplus S_c$, the process of mode characterization aims to construct the corresponding set of system modes $\hat{Q} = \{q_1, q_2, \dots, q_c\}$ by learning a NARX model $N_i$ adhering to the given template $N$ as the dynamics for each cluster $S_i$ in mode $q_i$ ($1 \le i \le c$). We achieve this by an immediate application of our LLSQ-based trace fitting technique established in Section 4.1: We find $N_i \in \langle N \rangle$ such that $N_i \models S_i$ by solving the linear optimization problem (5) with (6).
+
+#### **4.5 Guard Learning**
+Guard learning aims to learn a guard condition $g \subseteq \mathbb{R}^{n+m}$ for each mode switching. This task can be viewed as a (binary) classification problem. Considering the potential nonlinearity of guards $g \in G$ in the original hybrid automaton $H$, we employ SVMs to effectively identify the decision boundaries in a similar fashion as. We show how our guard learning problem can be reduced to SVMs by constructing the positive and negative datasets of samples. Let $\xi_j(\tau)$ be the $\tau$-th timestamp-free data point $\mathbf{v}_\tau$ on trace $\xi_j$; let $M_j(\tau)$ be the mode $q_i \in \hat{Q}$ such that the trace segment containing $\xi_j(\tau)$ is clustered into $S_i$. Then, for any pair of modes $q, q' \in \hat{Q}$, the corresponding positive dataset $(q, q')^+$ and negative dataset $(q, q')^-$ are constructed as
+$$
+(q, q')^+ = \bigcup_{j=1}^M \{\xi_j(\tau) | M_j(\tau) = q \text{ and } M_j(\tau+1) = q'\},
+$$
+$$
+(q, q')^- = \bigcup_{j=1}^M \{\xi_j(\tau) | M_j(\tau) = q \text{ and } M_j(\tau+1) \neq q'\}.
+$$
+
+#### **4.6 Reset Learning**
+The final step aims to fill the hole in every transition $e = (q, g, \cdot, q') \in \mathcal{T}$ by learning a linear reset function $r: \mathbb{R}^{k \times n + m} \to \mathbb{R}^{k \times n}$. For the case of high-order dynamics with $k > 1$, we employ a different form of reset function as
+$$
+r: \mathbb{R}^{k \times n+m} \to \langle N \rangle^k, (\vec{x}[\tau], \vec{x}[\tau-1], \dots, \vec{x}[\tau-k+1], \vec{u}[\tau]) \mapsto \{N_1, N_2, \dots, N_k\},
+\quad (7)
+$$
+such that each $N_i: (\vec{x}[\tau-1+i], \dots, \vec{x}[\tau-k+i], \vec{u}[\tau+i]) \mapsto \vec{x}[\tau+i]$ can be used to generate $\vec{x}[\tau+i]$ for the new mode. We construct the $k$ NARX models in (7) as the reset of transition $e = (q, g, \cdot, q')$ via NARX model fitting. For any $1 \le i \le k$,
+$$
+N_i \models \bigcup_{j=1}^M \{\xi_{l, l+k+1} \subseteq \xi_j | \xi_j(l+k-i) \in (q, q')^+\},
+$$
+where $\xi \subseteq \xi'$ means that $\xi$ is a segment of $\xi'$; that is, we fit $N_i \in \langle N \rangle$ using the data points on the i-th segment (of length $k+1$) enclosing the mode-switching point.of length $k+1$) enclosing the mode-switching point.

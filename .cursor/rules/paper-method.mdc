@@ -1,7 +1,7 @@
 ---
 description: The methodology section of the paper
 globs:
-alwaysApply: true
+alwaysApply: false
 ---
 
 ### **3 Problem Formulation**

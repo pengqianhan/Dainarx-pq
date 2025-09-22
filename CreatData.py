@@ -55,10 +55,28 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             state_data = np.transpose(np.array(state_data))
             input_data = np.transpose(np.array(input_data))
             mode_data = np.array(mode_data)
+            print("state_data.shape: ", state_data.shape)
+            print("mode_data.shape: ", mode_data.shape)
+            print("input_data.shape: ", input_data.shape)
+            print("change_points.shape: ", len(change_points))
+            '''
+            ball
+            state_data.shape:  (2, 1001)
+            mode_data.shape:  (1001,)
+            input_data.shape:  (0, 1001)
+            change_points.shape:  22
+            ----------------------------
+            duffing
+            state_data.shape:  (1, 1001)
+            mode_data.shape:  (1001,)
+            input_data.shape:  (1, 1001)
+            change_points.shape:  13
+            ----------------------------
+            '''
             np.savez(os.path.join(data_path, "test_data" + str(state_id)),
                      state=state_data, mode=mode_data, input=input_data, change_points=change_points)
             state_id += 1
 
 
 if __name__ == "__main__":
-    creat_data('automata/1.json', 'data', 0.01, 10)
+    creat_data('automata/non_linear/duffing.json', 'duffing_data', 0.01, 10)

@@ -1,7 +1,12 @@
-You are a hybrid automata expert. Analyze the data in the image and provide an json file of hybrid automata. 
+You are a hybrid automata expert. Analyze the data in the image and provide a JSON of hybrid automata. 
+The output ONLY contains the JSON file, no other text.
 You should point out the number of the variables from the image. The JSON format is just a general format, you should adjust the format according to the data in the image.
 
 The output JSON file must be a valid JSON file using the following format:
+Note: the 'xi[n]' represents the nth derivative of xi, 'xi[0]' represents the original value of xi.
+'x1[1]' represents the first derivative of x1, 'x1[0]' represents the original value of x1.
+'x1[2]' represents the second derivative of x1, 'x1[0]' represents the original value of x1.
+'x1[3]' represents the third derivative of x1, 'x1[0]' represents the original value of x1.
 
 ```json
 

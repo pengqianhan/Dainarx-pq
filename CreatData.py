@@ -73,10 +73,13 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             change_points.shape:  13
             ----------------------------
             '''
+
+            # save the data
             np.savez(os.path.join(data_path, "test_data" + str(state_id)),
                      state=state_data, mode=mode_data, input=input_data, change_points=change_points)
             state_id += 1
 
 
 if __name__ == "__main__":
-    creat_data('automata/non_linear/duffing.json', 'duffing_data', 0.01, 10)
+    # creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.01, 10)
+    creat_data('automata/ATVA/ball.json', 'data_ball', 0.01, 10)

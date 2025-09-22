@@ -67,9 +67,9 @@ def plot_fun(state_data: np.ndarray,
         series_index = num_states + idx
         ax_ts.plot(time, input_series[idx], label=f"u{idx + 1}", linestyle='--', color=cmap(series_index), linewidth=2)
 
-    ax_ts.set_xlabel('Time')
+    ax_ts.set_xlabel('Time (s)')
     ax_ts.set_ylabel('Values')
-    title_suffix = f" Sample {sample_index}" if sample_index is not None else ""
+    title_suffix = f" Sample {sample_index - 1}" if sample_index is not None else ""
     ax_ts.set_title(f"{system_name} {title_suffix} - Time Series".strip())
     ax_ts.grid(True, linestyle='--', alpha=0.4)
     ax_ts.legend(loc='best')
@@ -165,5 +165,5 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
 
 
 if __name__ == "__main__":
-    # creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.01, 10)
-    creat_data('automata/ATVA/ball.json', 'data_ball', 0.01, 10)
+    creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.01, 10)
+    # creat_data('automata/ATVA/ball.json', 'data_ball', 0.01, 10)

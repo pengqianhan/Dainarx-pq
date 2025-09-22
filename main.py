@@ -80,7 +80,8 @@ def get_config(json_path, evaluation: Evaluation):
 
 
 def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
-    evaluation = Evaluation(json_path)
+    
+    evaluation = Evaluation(json_path)# evaluation.name=json_path
     config, hash_code = get_config(json_path, evaluation)
     HybridAutomata.LoopWarning = not config['self_loop']
     print('config: ')

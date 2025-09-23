@@ -112,11 +112,11 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
             if re.search(r"(.)*\.npz", file) is None:
                 continue
             npz_file = np.load(os.path.join(root, file))# e.g. test_data14.npz
-            # print("npz_file.keys(): ", npz_file.keys()) # ['state', 'mode', 'input', 'change_points']
-            # print("npz_file['state'].shape: ", npz_file['state'].shape) # (1, 10001)
-            # print("npz_file['mode'].shape: ", npz_file['mode'].shape) # (10001, 1)
-            # print("npz_file['input'].shape: ", npz_file['input'].shape) # (1, 10001)
-            # print("npz_file['change_points'].shape: ", npz_file['change_points'].shape) # (23,)
+            print("npz_file.keys(): ", npz_file.keys()) # ['state', 'mode', 'input', 'change_points']
+            print("npz_file['state'].shape: ", npz_file['state'].shape) # (1, 10001)
+            print("npz_file['mode'].shape: ", npz_file['mode'].shape) # (10001, 1)
+            print("npz_file['input'].shape: ", npz_file['input'].shape) # (1, 10001)
+            print("npz_file['change_points'].shape: ", npz_file['change_points'].shape) # (23,)
             state_data_temp, mode_data_temp = npz_file['state'], npz_file['mode']
             change_point_list = npz_file.get('change_points', get_ture_chp(mode_data_temp))
             gt_list.append(change_point_list)
@@ -135,7 +135,9 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     evaluation.submit(gt_chp=gt_list[test_num:])
     evaluation.submit(train_mode_list=mode_list[test_num:])
     evaluation.start()
-    sys, slice_data = run(data[test_num:], input_list[test_num:], config, evaluation)
+    sys, slice_data = run(data[test_num:], input_list[test_num:], config, evaluation) #training to learn the hybrid automata
+    print('sys',sys)
+    
     print(f"mode number: {len(sys.mode_list)}")
     print("Start simulation")
     all_fit_mode, all_gt_mode = get_mode_list(slice_data, mode_list[test_num:])
@@ -149,17 +151,20 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     fit_data_list, mode_data_list = [], []
     draw_index = 0  # If it is None, draw all the test data
     for data, mode_list, input_list, init_state in zip(data_test, mode_list_test, input_list_test, init_state_test):
-        fit_data = [data[:, i] for i in range(config['order'])]
-        mode_data = list(mode_list[:config['order']])
-        sys.reset(init_state, input_list[:, :config['order']])
-        for i in range(config['order'], data.shape[1]):
-            state, mode, switched = sys.next(input_list[:, i])
+        fit_data = [data[:, i] for i in range(config['order'])]## 取前0:order-1个时间步作为初始值
+        mode_data = list(mode_list[:config['order']])## 取0:order-1个时间步作为初始值
+        sys.reset(init_state, input_list[:, :config['order']])## 用前order个数据点重置系统
+        # simulation to test the hybrid automata
+        for i in range(config['order'], data.shape[1]):## 从order个时间步开始模拟
+            state, mode, switched = sys.next(input_list[:, i]) ## 基于当前输入预测下一状态
             fit_data.append(state)
             mode_data.append(mode_map_inv.get(mode, -mode))
         fit_data = np.array(fit_data)
         evaluation.submit(mode_num=len(sys.mode_list))
         fit_data_list.append(np.transpose(fit_data))
         mode_data_list.append(mode_data)
+        # print('fit_data.shape: ', fit_data.shape) # (10001, 1)
+        # print('data.shape: ', data.shape) # (1, 10001)
         if need_plot and (draw_index == 0 or draw_index is None):
             need_plot = not need_plot
             for var_idx in range(data.shape[0]):

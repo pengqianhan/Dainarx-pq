@@ -153,7 +153,8 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     for data, mode_list, input_list, init_state in zip(data_test, mode_list_test, input_list_test, init_state_test):
         fit_data = [data[:, i] for i in range(config['order'])]## 取前0:order-1个时间步作为初始值
         mode_data = list(mode_list[:config['order']])## 取0:order-1个时间步作为初始值
-        sys.reset(init_state, input_list[:, :config['order']])## 用前order个数据点重置系统
+        sys.reset(init_state, input_list[:, :config['order']])
+        ## init_state 是初始状态(有mode和`x0`两个key)，input_list[:, :config['order']] 是前order个时间步的输入
         # simulation to test the hybrid automata
         for i in range(config['order'], data.shape[1]):## 从order个时间步开始模拟
             state, mode, switched = sys.next(input_list[:, i]) ## 基于当前输入预测下一状态

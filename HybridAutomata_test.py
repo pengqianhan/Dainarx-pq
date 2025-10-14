@@ -1,127 +1,157 @@
-import re
+import argparse
+import json
+import os
+from typing import Any, Dict
 
 import numpy as np
-from src.DE import ODE
-from src.ODE_System import ODESystem
-import json
-import matplotlib.pyplot as plt
-from math import *
+
+from CreatData import plot_fun
+from src.HybridAutomata import HybridAutomata
 
 
-class Node:
-    def __init__(self, var_list, ode_list):
-        self.var_list = var_list.copy()
-        self.ode_list = ode_list
+def simulate_hybrid_automata(json_path: str, init_index: int = 0) -> Dict[str, Any]:
+    with open(json_path, "r") as f:
+        automaton_data = json.load(f)
 
-    @classmethod
-    def from_str(cls, var_list, eq_list):
-        ode_list = []
-        for var in var_list:
-            fl = False
-            for eq in eq_list:
-                if var not in eq:
-                    continue
-                fl = True
-                ode_list.append(ODE(eq, var_name=var, method='rk'))
-                break
-            if not fl:
-                raise Exception("There is no matching equation for variable {}.".format(var))
-        return cls(var_list, ode_list)
+    init_states = automaton_data.get("init_state", [])
+    if not init_states:
+        raise ValueError("init_state is empty in the provided automaton file.")
+    if init_index < 0 or init_index >= len(init_states):
+        raise IndexError(f"init_index {init_index} is out of range (available: 0-{len(init_states) - 1}).")
 
-    def next(self, *args):
-        res = []
-        for ode in self.ode_list:
-            res.append(ode.next(*args))
-        return res
+    config = automaton_data.get("config", {})
+    dt = config.get("dt", 0.01)
+    total_time = config.get("total_time", 10.0)
+    steps = int(round(total_time / dt))
+    if steps <= 0:
+        raise ValueError("The simulation requires total_time / dt to produce at least one step.")
 
-    def load(self, other_node):
-        for i in range(len(self.var_list)):
-            self.ode_list[i].load(other_node.ode_list[i])
+    HybridAutomata.LoopWarning = not config.get("self_loop", False)
 
-    def reset(self, init_state):
-        for i in range(len(self.var_list)):
-            self.ode_list[i].clear(init_state.get(self.var_list[i]))
+    system = HybridAutomata.from_json(automaton_data["automaton"])
+    init_state = init_states[init_index]
+    system.reset(init_state)
+
+    state_trace = []
+    mode_trace = []
+    input_trace = []
+    change_points = [0]
+
+    for step in range(steps):
+        state, mode, switched = system.next(dt)
+        state_trace.append(state)
+        mode_trace.append(mode)
+        input_trace.append(system.getInput())
+        if switched:
+            change_points.append(step + 1)
+
+    change_points.append(steps)
+
+    state_array = np.array(state_trace, dtype=np.float64).T
+    mode_array = np.array(mode_trace, dtype=np.int32)
+    if input_trace and len(input_trace[0]) > 0:
+        input_array = np.array(input_trace, dtype=np.float64).T
+    else:
+        input_array = np.empty((0, steps), dtype=np.float64)
+
+    return {
+        "state": state_array,
+        "mode": mode_array,
+        "input": input_array,
+        "change_points": np.array(change_points, dtype=np.int32),
+        "dt": dt,
+        "total_time": total_time,
+        "json_path": json_path,
+        "init_index": init_index,
+    }
 
 
-class HybridAutomata:
-    LoopWarning = True
+def save_simulation(result: Dict[str, Any], out_dir: str) -> str:
+    os.makedirs(out_dir, exist_ok=True)
+    base_name = os.path.splitext(os.path.basename(result["json_path"]))[0]
+    filename = f"simulation_{base_name}_init{result['init_index']}.npz"
+    path = os.path.join(out_dir, filename)
+    np.savez(
+        path,
+        state=result["state"],
+        mode=result["mode"],
+        input=result["input"],
+        change_points=result["change_points"],
+        dt=result["dt"],
+        total_time=result["total_time"],
+    )
+    return path
 
-    def __init__(self, mode_list, adj, init_mode=None):
-        if init_mode is None:
-            self.mode_state = None
-        else:
-            self.mode_state = init_mode
-        self.mode_list = mode_list
-        self.adj = adj
 
-    @classmethod
-    def from_json(cls, info: dict):
-        var_list = re.split(r"\s*,\s*", info['var'])
-        input_expr = info.get('input')
-        if input_expr is None:
-            input_list = []
-        else:
-            input_list = re.split(r"\s*,\s*", info.get('input'))
-        mode_list = {}
+def plot_simulation(result: Dict[str, Any], out_dir: str, show: bool) -> str:
+    os.makedirs(out_dir, exist_ok=True)
+    base_name = os.path.splitext(os.path.basename(result["json_path"]))[0]
+    figure_name = f"simulation_{base_name}_init{result['init_index']}.png"
+    figure_path = os.path.join(out_dir, figure_name)
+    plot_fun(
+        result["state"],
+        result["input"],
+        result["dt"],
+        system_name=base_name,
+        sample_index=result["init_index"] + 1,
+        save_path=figure_path,
+        show=show,
+    )
+    return figure_path
 
-        adj = {}
-        for mode in info['mode']:
-            mode_id = mode['id']
-            mode_list[mode_id] = ODESystem(mode['eq'], var_list, input_list)
-            adj[mode_id] = []
-        for edge in info['edge']:
-            u_v = re.findall(r'\d+', edge['direction'])
-            fun = eval('lambda ' + info['var'] + ':' + edge['condition'])
-            reset_val = edge.get("reset", {})
-            adj[int(u_v[0])].append((int(u_v[1]), fun, reset_val))
-        return cls(mode_list, adj)
 
-    def getInput(self):
-        return self.mode_list[self.mode_state].getInput()
+def main():
+    parser = argparse.ArgumentParser(description="Simulate a hybrid automaton using the first initial value.")
+    parser.add_argument(
+        "--json",
+        default="automata/non_linear/duffing.json",
+        help="Path to the hybrid automaton description (default: automata/non_linear/duffing.json).",
+    )
+    parser.add_argument(
+        "--init-index",
+        type=int,
+        default=0,
+        help="Index of the initial state to use for the simulation (default: 0).",
+    )
+    parser.add_argument(
+        "--out-dir",
+        default="result",
+        help="Directory where plots and simulation data will be stored (default: result).",
+    )
+    parser.add_argument(
+        "--no-plot",
+        action="store_true",
+        help="Skip generating a plot for the simulated trajectory.",
+    )
+    parser.add_argument(
+        "--show",
+        action="store_true",
+        help="Display the plot interactively in addition to saving it.",
+    )
+    parser.add_argument(
+        "--save",
+        action="store_true",
+        help="Save the simulated trajectory to an NPZ file.",
+    )
+    args = parser.parse_args()
 
-    def next(self, *args):
-        res = list(self.mode_list[self.mode_state].next(*args))
-        mode_state = self.mode_state
-        vis = set()
-        via_list = []
-        is_cycle = False
-        switched = False
-        while True:
-            fl = True
-            for to, fun, reset_val in self.adj.get(self.mode_state, {}):
-                if fun(*res):
-                    # self.mode_list[to].load(self.mode_list[self.mode_state], reset_val)
-                    self.mode_state = to
-                    switched = True
-                    if to in vis:
-                        if HybridAutomata.LoopWarning:
-                            print("warning: find loop!")
-                        is_cycle = True
-                    vis.add(to)
-                    via_list.append((to, reset_val))
-                    fl = False
-                    break
-            if fl or is_cycle:
-                if len(via_list) != 0:
-                    to, reset_val = via_list[0] if is_cycle else via_list[-1]
-                    self.mode_list[to].load(self.mode_list[mode_state], reset_val)
-                    self.mode_state = to
-                break
-        return res, mode_state, switched
+    sim_result = simulate_hybrid_automata(args.json, init_index=args.init_index)
+    unique_modes = np.unique(sim_result["mode"])
+    print(
+        f"Simulated {sim_result['total_time']} seconds with dt={sim_result['dt']} "
+        f"using init_state[{args.init_index}] from {args.json}."
+    )
+    print(f"Visited modes: {unique_modes.tolist()}")
+    print(f"Detected change points (steps): {sim_result['change_points'].tolist()}")
 
-    def reset(self, init_state, *args):
-        self.mode_state = init_state.get('mode', self.mode_state)
-        self.mode_list[self.mode_state].reset(init_state, *args)
+    if args.save:
+        data_path = save_simulation(sim_result, args.out_dir)
+        print(f"Saved simulation arrays to {data_path}")
+
+    if not args.no_plot:
+        figure_path = plot_simulation(sim_result, args.out_dir, show=args.show)
+        print(f"Saved plot to {figure_path}")
 
 
 if __name__ == "__main__":
-    with open('automata/non_linear/duffing.json', 'r') as f:
-        data = json.load(f)
-        sys = HybridAutomata.from_json(data['automaton'])
-        res = []
-        for i in range(1000):
-            res.append(sys.next(0.01)[0])
-        res = np.array(res)
-        x2_data = res[:, 1]
-        plt.plot(np.arange(0, len(x2_data)), x2_data)
-        plt.show()
+    main()

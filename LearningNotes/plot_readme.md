@@ -11,7 +11,7 @@ python main.py
 - 自动机数据的json格式如下
 ```json5
 {
-  "automation": { // 自动机
+  "automaton": { // 自动机
     "var": "x1, x2", // 变量列表，用','隔开
     "mode": [ // 自动机的模式列表
       {

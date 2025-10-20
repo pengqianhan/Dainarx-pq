@@ -23,6 +23,7 @@ class HybridAutomataSimulation:
             automaton_data = json.load(f)
 
         init_states = automaton_data.get("init_state", [])
+        # print("len(init_states): ", len(init_states)) # 15
         if not init_states:
             raise ValueError("init_state is empty in the provided automaton file.")
         if self.init_index < 0 or self.init_index >= len(init_states):
@@ -31,7 +32,7 @@ class HybridAutomataSimulation:
             )
 
         config = automaton_data.get("config", {})
-        dt = config.get("dt", 0.01)
+        dt = config.get("dt", 0.001)
         total_time = config.get("total_time", 10.0)
         steps = int(round(total_time / dt))
         if steps <= 0:
@@ -40,6 +41,7 @@ class HybridAutomataSimulation:
         HybridAutomata.LoopWarning = not config.get("self_loop", False)
 
         system = HybridAutomata.from_json(automaton_data["automaton"])
+        print("self.init_index: ", self.init_index)
         init_state = init_states[self.init_index]
         system.reset(init_state)
 

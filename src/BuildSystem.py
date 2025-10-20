@@ -43,6 +43,7 @@ def get_init_state(data_list, mode_map, mode_list, bias):
             raise Exception("unknown mode: " + str(mode[bias - 1]))
         init_state = {'mode': mode_map[mode[bias - 1]]}
         for i in range(data.shape[0]):
+            # print("data[i, (bias - 1)::-1]: ", data[i, (bias - 1)::-1]) # reverse slice, from bias-1 to start
             init_state['x' + str(i)] = data[i, (bias - 1)::-1]
         res.append(init_state)
     return res

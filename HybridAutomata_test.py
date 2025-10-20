@@ -116,7 +116,7 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate a hybrid automaton using the first initial value.")
     parser.add_argument(
         "--json",
-        default="automata/non_linear/duffing.json",
+        default="automata/non_linear/duffing_simulate.json",
         help="Path to the hybrid automaton description (default: automata/non_linear/duffing.json).",
     )
     parser.add_argument(

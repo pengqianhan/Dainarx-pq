@@ -58,7 +58,12 @@ def plot_fun(state_data: np.ndarray,
         ax_ts = axes
 
     total_series = num_states + num_inputs
-    cmap = plt.cm.get_cmap('tab20', max(total_series, 1))
+    try:
+        cmap = plt.cm.get_cmap('tab20', max(total_series, 1))
+    except (AttributeError, TypeError):
+        # For matplotlib >= 3.7, get_cmap only takes colormap name
+        import matplotlib as mpl
+        cmap = mpl.colormaps['tab20']
 
     for idx in range(num_states):
         ax_ts.plot(time, state_data[idx], label=f"x{idx + 1}", color=cmap(idx), linewidth=2)

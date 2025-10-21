@@ -18,16 +18,12 @@ def extract_number_from_filename(filename):
         return int(match.group(1))
     return 0  # 默认值，如果没有找到数字
 
-def get_init_state_ha(data_list, mode_list, bias):
-    # For now, just return the first (and likely only) initial state
-    data = data_list[0] if len(data_list) > 0 else None
-    if data is None:
-        raise ValueError("No state data available")
+def get_init_state_ha(data, mode_map, mode, bias):
 
-    # init_state = {'mode': mode_map[mode[bias - 1]]}
-    init_state = {'mode': 1}
-    # data shape is (n_timesteps,) for single state, we want the first 'bias' timesteps
-    init_state['x0'] = data[:bias]
+    init_state = {'mode': mode_map[mode[bias - 1]]}
+    for i in range(data.shape[0]):
+        # print("data[i, (bias - 1)::-1]: ", data[i, (bias - 1)::-1]) # reverse slice, from bias-1 to start
+        init_state['x' + str(i)] = data[i, (bias - 1)::-1]
     return init_state
 
 class HybridAutomataSimulation:
@@ -44,21 +40,10 @@ class HybridAutomataSimulation:
         with open(self.json_path, "r") as f:
             automaton_data = json.load(f)
 
-        # init_states = automaton_data.get("init_state", [])
-        # print("len(init_states): ", len(init_states)) # 15
-        # if not init_states:
-        #     raise ValueError("init_state is empty in the provided automaton file.")
-        # if self.init_index < 0 or self.init_index >= len(init_states):
-        #     raise IndexError(
-        #         f"init_index {self.init_index} is out of range (available: 0-{len(init_states) - 1})."
-        #     )
 
         config = automaton_data.get("config", {})
         dt = config.get("dt", 0.001)
         total_time = config.get("total_time", 10.0)
-        steps = int(round(total_time / dt))
-        if steps <= 0:
-            raise ValueError("The simulation requires total_time / dt to produce at least one step.")
 
         HybridAutomata.LoopWarning = not config.get("self_loop", False)
 
@@ -67,43 +52,40 @@ class HybridAutomataSimulation:
         state_data = npz_data["state"]
         mode_data = npz_data["mode"]
         input_data = npz_data["input"]
+        # print("state_data.shape: ", state_data.shape)
+        # print("mode_data.shape: ", mode_data.shape)
+        # print("input_data.shape: ", input_data.shape)
         # change_points = npz_data["change_points"]
-        init_state = get_init_state_ha(state_data, mode_data, config['order'])
+        mode_map = {np.int64(1): np.int64(1), np.int64(2): np.int64(2), np.int64(3): np.int64(3)}
+        init_state = get_init_state_ha(state_data, mode_map, mode_data, config['order'])
+        
+        print("init_state: ", init_state)
+        print("input_data[:, :config['order']].shape: ", input_data[:, :config['order']].shape)
+        print("input_data.shape: ", input_data.shape)
         sys.reset(init_state)
 
-        state_trace = []
-        mode_trace = []
-        input_trace = []
+        mode_pred = [init_state['mode'] for _ in range(config['order'])]
+        print("mode_pred: ", mode_pred)
         change_points = [0]
         fit_data = [state_data[:, i] for i in range(config['order'])]## 取前0:order-1个时间步作为初始值
 
         for i in range(config['order'], state_data.shape[1]):## 从order个时间步开始模拟
             state, mode, switched = sys.next(input_data[:, i]) ## 基于当前输入预测下一状态
             fit_data.append(state)
-        fit_data = np.transpose(np.array(fit_data))
+            mode_pred.append(mode)
+        # fit_data = np.transpose(np.array(fit_data))
+        fit_data = np.array(fit_data)
+        mode_pred = np.array(mode_pred)
+        # mode_pred = np.concatenate([[init_state['mode']].repeat(len(init_state['x0'])), mode_pred])
         print("fit_data.shape: ", fit_data.shape)
-
-        for step in range(steps):
-            state, mode, switched = sys.next(dt)
-            state_trace.append(state)
-            mode_trace.append(mode)
-            input_trace.append(sys.getInput())
-            if switched:
-                change_points.append(step + 1)
-
-        change_points.append(steps)
-
-        state_array = np.array(state_trace, dtype=np.float64).T
-        mode_array = np.array(mode_trace, dtype=np.int32)
-        if input_trace and len(input_trace[0]) > 0:
-            input_array = np.array(input_trace, dtype=np.float64).T
-        else:
-            input_array = np.empty((0, steps), dtype=np.float64)
+        print("mode_pred.shape: ", mode_pred.shape)
+        print("state_data.shape: ", state_data.shape)
+        assert fit_data.shape ==state_data.shape , "fit_data.shape: {fit_data.shape} != state_data.shape: {state_data.shape}"
 
         self._result = {
-            "state": state_array,
-            "mode": mode_array,
-            "input": input_array,
+            "state": fit_data,
+            "mode": mode_pred,
+            "input": input_data,
             "change_points": np.array(change_points, dtype=np.int32),
             "dt": dt,
             "total_time": total_time,
@@ -177,7 +159,7 @@ def main():
     parser.add_argument(
         "--npz-file",
         type=str,
-        default="data_duffing\test_data0.npz",
+        default="data_duffing/test_data0.npz",
         help="the npz file path (default: data_duffing\test_data0.npz).",
     )
     args = parser.parse_args()

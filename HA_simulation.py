@@ -115,6 +115,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
     with open(json_path, 'r') as f:
         data = json.load(f)
         sys = HybridAutomata.from_json(data['automaton'])
+        dT = data['config']['dt']
         state_id = 0
         cnt = 0
         # load npz file

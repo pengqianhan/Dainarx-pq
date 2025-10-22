@@ -120,6 +120,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
         # load npz file
         npz_file = np.load('data_duffing/test_data0.npz')
         state_data_npz = npz_file['state']
+        input_list = npz_file['input']
         init_state = state_data_npz[:, :1].tolist()[0]
         init_state = np.float64(init_state)
         
@@ -140,7 +141,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
         init_state_dict['u'] = '0.5 * cos(1.2 * t)'
         print('init_state_dict: ', init_state_dict)
         
-        input_list = npz_file['input']
+        
         # data['init_state'] = [{'mode': 1, 'x': [4], 'u': '0.5 * cos(1.2 * t)'}]
         data['init_state'] = [init_state_dict]
         for init_state in data['init_state']:

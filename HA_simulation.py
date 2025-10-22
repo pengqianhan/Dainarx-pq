@@ -7,7 +7,6 @@ from typing import Optional
 from src.HybridAutomata import HybridAutomata
 import json
 
-
 def plot_fun(state_data: np.ndarray,
              input_data: np.ndarray,
              dt: float,
@@ -91,7 +90,7 @@ def plot_fun(state_data: np.ndarray,
         plt.close(fig)
 
 
-def creat_data(json_path: str, data_path: str, dT: float, times: float):
+def ha_simulation(json_path: str, data_path: str, dT: float, times: float):
     r"""
     :param json_path: File path of automata.
     :param data_path: Data storage path.
@@ -172,6 +171,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             mode_data = np.array(mode_data)
             # plot data
             system_title = os.path.splitext(os.path.basename(json_path))[0]
+            system_title = 'duffing'
             figure_path = os.path.join(data_path, f"sample_{state_id}.png")
             plot_fun(state_data, input_data, dT, system_name=system_title,
                      sample_index=cnt, save_path=figure_path, show=False)
@@ -183,5 +183,5 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
 
 
 if __name__ == "__main__":
-    creat_data('automata/non_linear/duffing_simulate.json', 'data_duffing_simulation', 0.001, 10)
-    # creat_data('automata/ATVA/ball.json', 'data_ball', 0.001, 10)
+    ha_simulation('automata/non_linear/duffing_simulate.json', 'data_duffing_simulation', 0.001, 10)
+    # ha_simulation('automata/ATVA/ball.json', 'data_ball', 0.001, 10)

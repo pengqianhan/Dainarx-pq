@@ -138,8 +138,11 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
                 init_state_dict[var_name] = [init_state[i]] if i < len(init_state) else [0.0]
         
         print('init_state_dict: ', init_state_dict)
-        init_state_dict['u'] = '0.5 * cos(1.2 * t)'
-        print('init_state_dict: ', init_state_dict)
+        # Use numpy array directly instead of function expression
+        init_state_dict['u'] = input_list
+        print('input_list: ', input_list)
+        print('input_list.shape: ', input_list.shape)
+        print('init_state_dict with array input: ', {k: v if not isinstance(v, np.ndarray) else f'<array shape={v.shape}>' for k, v in init_state_dict.items()})
         
         
         # data['init_state'] = [{'mode': 1, 'x': [4], 'u': '0.5 * cos(1.2 * t)'}]
@@ -150,7 +153,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             mode_data = []
             input_data = []
             change_points = [0]
-            sys.reset(init_state)
+            sys.reset(init_state, dt=dT)
             now = 0.
             idx = 0
             while now < times:

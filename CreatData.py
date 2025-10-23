@@ -170,5 +170,6 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
 
 
 if __name__ == "__main__":
-    creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
+    # creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
     # creat_data('automata/ATVA/ball.json', 'data_ball', 0.001, 10)
+    creat_data('automata/non_linear/lander.json', 'data_lander', 0.01, 10)

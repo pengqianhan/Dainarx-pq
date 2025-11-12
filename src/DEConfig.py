@@ -56,9 +56,9 @@ class FeatureExtractor:
         res_order = [[] for _ in range(var_num)]
         expr_list = expr_list.split(';')
         for idx in range(var_num):
-            expr = FeatureExtractor.extractValidExpression(expr_list, idx)
-            expr = FeatureExtractor.unfoldDigit(expr, order)
-            expr = FeatureExtractor.unfoldItem(expr, idx, var_num)
+            expr = FeatureExtractor.extractValidExpression(expr_list, idx)# 提取针对特定变量的有效表达式
+            expr = FeatureExtractor.unfoldDigit(expr, order)# 根据order展开阶数
+            expr = FeatureExtractor.unfoldItem(expr, idx, var_num)# 根据var_num展开项
             for s in expr:
                 res[idx].append(eval('lambda x: ' + s))
                 res_order[idx].append(FeatureExtractor.findMaxorder(s) + 1)

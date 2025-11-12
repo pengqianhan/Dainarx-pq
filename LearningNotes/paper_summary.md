@@ -55,14 +55,14 @@ def append_data(self, matrix_list, b_list, data: np.array, input_data):
             b_list[idx].append(data[idx][i + self.order])  # 目标值 x[t]
 ```
 
-#### 1.1 非线性项的实现
+#### 1.1 非线性项的添加过程
 
 完整的非线性项工作流程
 
   步骤1：在初始化时解析非线性表达式
   ```python
-
-  def __init__(self, var_num: int, input_num: int, order: int, dt: float,
+class FeatureExtractor:
+    def __init__(self, var_num: int, input_num: int, order: int, dt: float,
                need_bias: bool = False, minus: bool = False, other_items: str = ''):
       self.var_num = var_num
       self.order = order

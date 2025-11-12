@@ -135,6 +135,11 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
     evaluation.submit(gt_chp=gt_list[test_num:])
     evaluation.submit(train_mode_list=mode_list[test_num:])
     evaluation.start()
+    print('config: ', config)
+    '''
+    config:  {'dt': 0.001, 'total_time': 10.0, 'order': 2, 'window_size': 10, 'clustering_method': 'fit', 'minus': False, 'need_bias': True, 'other_items': 'x[?] ** 3', 'kernel': 'rbf', 'svm_c': 1000000.0, 'class_weight': 1.0, 'need_reset': True, 'self_loop': False}
+Backend qtagg is interactive backend. Turning interactive mode on.
+    '''
     sys, slice_data = run(data[test_num:], input_list[test_num:], config, evaluation) #training to learn the hybrid automata
     print('sys',sys)
     

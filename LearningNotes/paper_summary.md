@@ -391,34 +391,103 @@ $$
 
 ### 4. 动态阈值校准
 
-虽然分割阶段使用了机器级阈值，但在聚类阶段需要一个更宽松的阈值，用于判断"两个数据段是否属于同一模式"。这个阈值通过**训练数据自动校准**。
+虽然分割阶段使用了机器级阈值，但在聚类阶段需要一个更宽松的阈值，用于判断"两个数据段是否属于同一模式"。这个阈值通过**训练数据自动校准**，避免了人工调参的困扰。
 
-**代码实现** (src/CurveSlice.py:32-54)：
+#### 4.1 为什么需要动态阈值校准？
+
+在完成数据分割后，所有轨迹的片段（segments）都被保存在 `slice_data` 列表中。这些片段需要被进一步聚类以识别不同的动态模式。关键问题是：**如何判断两个片段是否属于同一模式？**
+
+传统方法通过比较参数向量的欧氏距离(DTW)来判断，但这种方法存在致命缺陷：
+- **阈值的人工设定**：距离阈值需要手动调整，缺乏物理意义
+- **尺度敏感性**：不同系统的参数量级差异巨大，固定阈值无法适应
+- **噪声敏感性**：参数扰动可能导致距离超过阈值，误判为不同模式
+
+本方法采用**数据驱动的自适应阈值学习**，从训练数据本身推断出合理的阈值范围。
+
+#### 4.2 阈值校准的核心思想
+
+**基本假设**：在时间序列中，相邻片段通常来自不同模式（因为它们由变化点分割）。因此，**相邻片段之间的拟合误差可以作为"模式间最小差异"的估计**。
+
+**校准策略**：
+1. 遍历所有相邻片段对 `(slice[i], slice[i+1])`
+2. 尝试用单一 NARX 模型同时拟合这两个片段
+3. 记录拟合误差 `err` 和参数差异 `dis`
+4. 将阈值设为所有误差的 **10%**（`ToleranceRatio = 0.1`）
+
+这样设定的阈值既能区分不同模式（误差远大于阈值），又能容忍同一模式内的小幅波动（误差远小于阈值）。
+
+#### 4.3 代码实现流程
+
+**主流程**（main.py:40-46）：
+```python
+# 第1步：切分所有轨迹，得到片段列表
+slice_data = []
+for data, input_val in zip(data_list, input_data):
+    change_points = find_change_point(data, input_val, get_feature, w=config['window_size'])
+    slice_curve(slice_data, data, input_val, change_points, get_feature)
+    # ↑ slice_curve 将每条轨迹按变化点切分，并把所有片段累积到 slice_data 中
+
+# 第2步：设置聚类方法
+Slice.Method = config['clustering_method']  # 'fit' 或 'dis'
+
+# 第3步：动态校准阈值 ← 核心步骤
+Slice.fit_threshold(slice_data)
+
+# 第4步：使用校准的阈值进行聚类
+clustering(slice_data, config['self_loop'])
+```
+
+**阈值校准函数**（src/CurveSlice.py:56-63）：
+```python
+@staticmethod
+def fit_threshold(data: list):
+    """遍历所有片段，校准三种类型的阈值"""
+    # 比较相邻片段（跳过每条轨迹的首片段）
+    for i in range(len(data)):
+        if data[i].isFront:  # 如果是某条轨迹的第一个片段，跳过
+            continue
+        # 将当前片段与前一个片段比较，更新全局阈值
+        Slice.fit_threshold_one(data[i].get_feature, data[i], data[i - 1])
+    
+    # 验证所有片段的有效性（标记拟合误差过大的片段）
+    for s in data:
+        s.check_valid()
+```
+
+**单对片段的阈值校准**（src/CurveSlice.py:32-54）：
 ```python
 @staticmethod
 def fit_threshold_one(get_feature, data1, data2):
-    """比较两个相邻数据段，校准 FitErrorThreshold"""
-    feature1 = data1.feature
-    feature2 = data2.feature
-
+    """比较两个相邻数据段，校准三种阈值"""
+    feature1 = data1.feature  # data1 的 NARX 参数
+    feature2 = data2.feature  # data2 的 NARX 参数
+    
+    # 1️⃣ 拟合误差阈值（FitErrorThreshold）
     # 尝试用单一 NARX 模型同时拟合这两个数据段
     _, err, fit_order = get_feature([data1.data, data2.data],
                                   [data1.input_data, data2.input_data], is_list=True)
-
-    # 如果拟合阶数没有增加，说明两段可能属于同一模式
+    
+    # 如果拟合阶数没有增加，说明两段可能属于不同模式但动态复杂度相近
     if fit_order <= max(data1.fit_order, data2.fit_order):
-        # 将阈值设为拟合误差的 0.1 倍（容忍度比例）
+        # 更新阈值为当前误差的 10%（取所有误差的最小值）
         Slice.FitErrorThreshold = min(Slice.FitErrorThreshold,
                                       max(err) * Slice.ToleranceRatio)
-        Slice.FitErrorThreshold = max(Slice.FitErrorThreshold, 1e-6)
+        Slice.FitErrorThreshold = max(Slice.FitErrorThreshold, 1e-6)  # 下限保护
 
-    # 同时校准基于参数距离的阈值
+    # 初始化阈值列表（长度与特征向量维度一致）
+    while len(Slice.RelativeErrorThreshold) < len(feature1):
+        Slice.RelativeErrorThreshold.append(1e-1)
+        Slice.AbsoluteErrorThreshold.append(1e-1)
+    
+    # 2️⃣ 参数距离阈值（用于 'dis' 聚类方法）
     idx = 0
     for v1, v2 in zip(feature1, feature2):
         relative_dis, dis = Slice.get_dis(v1, v2)
+        # 相对距离阈值：适用于大数值参数
         if relative_dis > 1e-4:
             Slice.RelativeErrorThreshold[idx] = \
                 min(Slice.RelativeErrorThreshold[idx], relative_dis * Slice.ToleranceRatio)
+        # 绝对距离阈值：适用于小数值参数
         if dis > 1e-4:
             Slice.AbsoluteErrorThreshold[idx] = \
                 min(Slice.AbsoluteErrorThreshold[idx], max(dis * Slice.ToleranceRatio, 1e-6))
@@ -426,16 +495,107 @@ def fit_threshold_one(get_feature, data1, data2):
     return True
 ```
 
-**设计思想**：
-- 遍历训练数据中所有相邻的数据段对
-- 如果相邻段属于**不同模式**，它们的联合拟合误差就代表了"模式间差异"
-- 将阈值设为这些差异的 10% (`ToleranceRatio = 0.1`)，既保证了区分度，又允许一定的噪声容忍
-
-**示意图**：
+**距离计算函数**（src/CurveSlice.py:23-29）：
+```python
+@staticmethod
+def get_dis(v1, v2):
+    """计算两个参数向量的相对距离和绝对距离"""
+    dis = np.linalg.norm(v1 - v2, ord=1)  # L1 距离（绝对距离）
+    d1 = np.linalg.norm(v1, ord=1)
+    d2 = np.linalg.norm(v2, ord=1)
+    d_min = min(d1, d2)
+    relative_dis = dis / max(d_min, 1e-6)  # 相对距离 = 差值 / 最小值
+    return relative_dis, dis
 ```
-段1(模式A)  段2(模式B)
-  ↓           ↓
-  合并拟合 → err = 0.05  →  FitErrorThreshold = 0.005 (10%)
+
+**片段有效性检查**（src/CurveSlice.py:65-68）：
+```python
+def check_valid(self):
+    """检查片段的拟合误差是否超过阈值"""
+    if self.valid and self.err > Slice.FitErrorThreshold:
+        warnings.warn("Find a invalid segmentation!")
+        self.valid = False  # 标记为无效片段，后续聚类时跳过
+```
+
+#### 4.4 三种阈值的作用
+
+| 阈值类型 | 变量名 | 用途 | 计算方式 |
+|---------|--------|------|---------|
+| **拟合误差阈值** | `FitErrorThreshold` | 判断多个片段能否被单一 NARX 模型拟合 | `min(相邻段联合拟合误差) × 0.1` |
+| **相对距离阈值** | `RelativeErrorThreshold` | 判断参数向量的相对差异（适用大数值） | `min(相邻段参数相对距离) × 0.1` |
+| **绝对距离阈值** | `AbsoluteErrorThreshold` | 判断参数向量的绝对差异（适用小数值） | `min(相邻段参数绝对距离) × 0.1` |
+
+**阈值选择策略**：
+- 默认使用 **拟合误差阈值**（`clustering_method = 'fit'`），基于物理意义，更鲁棒
+- 可选使用 **距离阈值**（`clustering_method = 'dis'`），计算更快但对噪声敏感
+
+#### 4.5 工作机制示例
+
+假设有一条轨迹被分割成 5 个片段：
+
+```
+片段序列：  [段0]  [段1]  [段2]  [段3]  [段4]
+模式归属：   A      B      A      C      A
+```
+
+**校准过程**：
+```
+比较对1：段0 vs 段1（模式A vs B）
+  → 联合拟合误差 err₁ = 0.05
+  → FitErrorThreshold = min(1.0, 0.05 × 0.1) = 0.005
+
+比较对2：段1 vs 段2（模式B vs A）
+  → 联合拟合误差 err₂ = 0.08
+  → FitErrorThreshold = min(0.005, 0.08 × 0.1) = 0.005
+
+比较对3：段2 vs 段3（模式A vs C）
+  → 联合拟合误差 err₃ = 0.12
+  → FitErrorThreshold = min(0.005, 0.12 × 0.1) = 0.005
+
+比较对4：段3 vs 段4（模式C vs A）
+  → 联合拟合误差 err₄ = 0.10
+  → FitErrorThreshold = min(0.005, 0.10 × 0.1) = 0.005
+
+最终阈值：FitErrorThreshold = 0.005
+```
+
+**后续聚类时的判断**：
+- 同一模式内的片段（如段0和段2）：拟合误差 ≈ 1e-10 << 0.005 ✓ 归为同类
+- 不同模式的片段（如段0和段1）：拟合误差 ≈ 0.05 >> 0.005 ✗ 归为不同类
+
+#### 4.6 设计优势
+
+1. **自适应性**：阈值从数据本身学习，无需人工调参
+2. **尺度不变性**：通过相对距离和误差百分比，适应不同量级的系统
+3. **物理可解释性**：阈值代表"模式间最小差异的 10%"，有明确的统计意义
+4. **鲁棒性**：通过 `min()` 操作选择最严格的阈值，降低误分类风险
+5. **容错性**：10% 的容忍比例允许噪声和小幅波动
+
+**关键洞察**：
+> 阈值校准的本质是一种**"对比学习"**——通过比较确定属于不同模式的片段对，学习"什么是不同"的标准，然后将这个标准缩小 10 倍作为聚类的边界。这种方法巧妙地将"无监督聚类"问题转化为"弱监督学习"问题（时序信息提供了弱标签）。
+
+#### 4.7 与分割阶段阈值的对比
+
+| 特性 | 分割阶段（机器级阈值） | 聚类阶段（动态阈值） |
+|------|----------------------|---------------------|
+| **目的** | 检测模式切换的精确时刻 | 判断片段是否属于同一模式 |
+| **阈值来源** | 数学定义 `1e-6 × dt × max(data)` | 数据驱动学习 |
+| **严格程度** | 极严格（误差 ~1e-10 才通过） | 相对宽松（误差 < 0.005 可通过） |
+| **物理意义** | 单一模型完美拟合的极限 | 模式间差异的容忍边界 |
+
+**流程示意**：
+```
+原始数据
+   ↓
+[分割阶段] 使用机器级阈值（严格）
+   ↓ 检测到变化点
+切分后的片段列表 (slice_data)
+   ↓
+[校准阶段] 学习动态阈值（自适应） ← 本节重点
+   ↓ 计算 FitErrorThreshold
+[聚类阶段] 使用动态阈值（宽松）
+   ↓
+模式识别结果
 ```
 
 ### 5. 基于拟合能力的聚类算法

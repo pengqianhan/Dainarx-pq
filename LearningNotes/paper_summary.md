@@ -847,8 +847,788 @@ def test_set(self, other_list):
 [段5] test_set([段3]) → 通过 → 模式2
 [段6] test_set([段1,段2,段4]) → 失败 → test_set([段3,段5]) → 失败 → 模式3
 ```
+### 6. Guard Learning and Reset Learning
 
-### 6. 完整的识别流程
+Guard Learning 和 Reset Learning 是混合自动机识别的最后两个关键步骤，分别负责学习**模式切换的触发条件**和**切换时的状态重置规则**。
+
+#### 6.1 Guard Learning：基于 SVM 的切换条件学习
+
+**核心思想**：将守卫条件学习转化为**二分类问题** —— 对于每个模式对 $(q, q')$，学习一个分类器来判断"在当前状态下，系统是否会从模式 $q$ 切换到模式 $q'$"。
+
+##### 6.1.1 正负样本构造策略
+
+**代码实现** (src/GuardLearning.py:8-31)：
+
+```python
+def guard_learning(data: list[Slice], get_feature, config):
+    """学习守卫条件和重置函数"""
+    positive_sample = {}  # 正样本：发生切换的状态点
+    negative_sample = {}  # 负样本：未发生切换的状态点
+    slice_data = {}       # 用于重置函数学习的数据段对
+    need_reset = config['need_reset']
+    
+    # 遍历所有数据段，收集正负样本
+    for i in range(len(data)):
+        if not data[i].valid:
+            continue
+        mode = data[i].mode
+        
+        # 1️⃣ 负样本收集：当前模式内的所有状态点（除最后一个）
+        if negative_sample.get(mode) is None:
+            negative_sample[mode] = []
+        # 转置后每行是一个状态向量 [x₁, x₂, ..., xₙ]
+        negative_sample[mode].append(np.transpose(data[i].data[:, :-1]))
+        
+        # 跳过轨迹起点或无效段
+        if i == 0 or not data[i - 1].valid or data[i].isFront:
+            continue
+        
+        # 2️⃣ 正样本收集：发生模式切换的边界点
+        idx = (data[i - 1].mode, data[i].mode)  # 切换对 (源模式, 目标模式)
+        if positive_sample.get(idx) is None:
+            positive_sample[idx] = []
+            slice_data[idx] = [[], []] if need_reset else None
+        
+        # 保存切换前的最后一个状态点
+        positive_sample[idx].append(data[i - 1].data[:, -1])
+        
+        # 如果需要学习重置函数，保存切换前后的数据段
+        if need_reset:
+            slice_data[idx][0].append(data[i - 1])  # 切换前的段
+            slice_data[idx][1].append(data[i])      # 切换后的段
+    
+    # 合并所有负样本
+    for (key, val) in negative_sample.items():
+        negative_sample[key] = np.concatenate(val)
+```
+
+**样本构造的数学定义**（对应论文 Section 4.5）：
+
+对于任意模式对 $(q, q') \in \hat{Q} \times \hat{Q}$：
+
+$$
+(q, q')^+ = \bigcup_{j=1}^M \{\xi_j(\tau) \mid M_j(\tau) = q \text{ 且 } M_j(\tau+1) = q'\}
+$$
+
+$$
+(q, q')^- = \bigcup_{j=1}^M \{\xi_j(\tau) \mid M_j(\tau) = q \text{ 且 } M_j(\tau+1) \neq q'\}
+$$
+
+其中：
+- $\xi_j(\tau)$ 是第 $j$ 条轨迹在时刻 $\tau$ 的状态向量 $(\vec{x}[\tau], \vec{u}[\tau])$
+- $M_j(\tau)$ 是该时刻所属的模式
+- $(q, q')^+$ 是**正样本集**：所有导致 $q \to q'$ 切换的状态点
+- $(q, q')^-$ 是**负样本集**：所有在模式 $q$ 但未切换到 $q'$ 的状态点
+
+**关键设计洞察**：
+
+1. **负样本的巧妙定义**：不是"所有不属于 $q$ 的状态"，而是"属于 $q$ 但未切换到 $q'$ 的状态"
+   - 这样定义的负样本与正样本在**同一模式内**，只是切换目标不同
+   - 避免了"模式内部状态 vs 切换边界状态"这种过于简单的分类问题
+   - 使 SVM 学到的决策边界更精确地刻画"何时触发特定切换"
+
+2. **样本不平衡问题**：负样本数量通常远大于正样本（一个模式内大部分时间不发生切换）
+   - 通过 `class_weight` 参数调整：`class_weight={0: config['class_weight'], 1: 1}`
+   - 默认 `class_weight=1.0`，可根据实际情况调整负样本权重
+
+##### 6.1.2 SVM 训练与守卫条件提取
+
+**代码实现** (src/GuardLearning.py:37-44)：
+
+```python
+adj = {}
+for (u, v), sample in positive_sample.items():
+    # 初始化 SVM 分类器
+    svc = SVC(
+        C=config['svm_c'],           # 正则化参数（默认 1e6，强调拟合精度）
+        kernel=config['kernel'],      # 核函数：'linear', 'rbf', 'poly' 等
+        class_weight={0: config['class_weight'], 1: 1}  # 类别权重
+    )
+    
+    # 构造训练数据
+    # 标签：0 = 负样本（不切换到 v），1 = 正样本（切换到 v）
+    label = np.concatenate((
+        np.zeros(negative_sample[u].shape[0]),  # 负样本标签
+        np.ones(len(positive_sample[(u, v)]))   # 正样本标签
+    ))
+    
+    # 特征：状态向量 (x₁, x₂, ..., xₙ, u₁, u₂, ..., uₘ)
+    sample = np.concatenate((
+        negative_sample[u],      # 模式 u 内的非切换状态
+        positive_sample[(u, v)]  # u → v 切换边界的状态
+    ))
+    
+    # 训练 SVM
+    svc.fit(sample, label)
+    
+    # 存储：邻接表 adj[(u, v)] = (守卫分类器, 重置函数)
+    adj[(u, v)] = (svc, slice_data[(u, v)])
+
+return adj
+```
+
+**SVM 决策函数的物理意义**：
+
+训练后的 SVM 模型 `svc` 定义了一个决策函数 $g_{q \to q'}: \mathbb{R}^{n+m} \to \{0, 1\}$：
+
+$$
+g_{q \to q'}(\vec{x}, \vec{u}) = 
+\begin{cases}
+1 & \text{如果 } f_{\text{SVM}}(\vec{x}, \vec{u}) > 0.5 \\
+0 & \text{否则}
+\end{cases}
+$$
+
+其中 $f_{\text{SVM}}$ 是 SVM 的决策函数（对于 RBF 核，这是一个非线性函数）。
+
+**核函数选择**：
+
+| 核函数 | 适用场景 | 示例系统 |
+|--------|---------|---------|
+| `linear` | 线性守卫条件（如 $x_1 + x_2 \leq c$） | 温控系统、简单开关系统 |
+| `rbf` | 非线性守卫条件（如 $x^2 + y^2 \leq r^2$） | Duffing 振子、弹跳球 |
+| `poly` | 多项式守卫条件（如 $x^3 - 2x \geq 0$） | 高阶非线性系统 |
+
+**Duffing 振子示例**：
+
+真实守卫条件：
+- $q_1 \to q_2$: $|x| \leq 0.8$
+- $q_2 \to q_1$: $|x| \geq 1.2$
+
+使用 `kernel='rbf'` 的 SVM 可以学习到近似的非线性决策边界。
+
+##### 6.1.3 守卫条件在仿真中的应用
+
+**代码实现** (src/BuildSystem.py:10-16)：
+
+```python
+class ModelFun:
+    """将 SVM 模型包装为可调用的守卫函数"""
+    def __init__(self, model):
+        self.model = copy.copy(model)
+    
+    def __call__(self, *args):
+        """输入状态向量，返回布尔值（是否触发切换）"""
+        return self.model.predict([[*args]])[0] > 0.5
+```
+
+**在混合自动机中的使用** (src/HybridAutomata.py:89-103)：
+
+```python
+def next(self, *args):
+    """执行一步仿真，检测模式切换"""
+    # 1. 在当前模式下执行一步动力学演化
+    res = list(self.mode_list[self.mode_state].next(*args))
+    
+    # 2. 检查所有可能的出边
+    for to, fun, reset_val in self.adj.get(self.mode_state, {}):
+        # 3. 调用守卫函数判断是否触发切换
+        if fun(*res):  # ← 这里调用 ModelFun，即 SVM 分类器
+            self.mode_state = to
+            # 4. 执行状态重置
+            self.mode_list[to].load(self.mode_list[mode_state], reset_val)
+            break
+    
+    return res, mode_state, switched
+```
+
+#### 6.2 Reset Learning：高阶系统的状态重置学习
+
+**核心挑战**：对于高阶系统（$k > 1$），模式切换时不仅需要重置当前状态 $\vec{x}[\tau]$，还需要重置历史状态 $\vec{x}[\tau-1], \vec{x}[\tau-2], \ldots, \vec{x}[\tau-k+1]$，因为 NARX 模型依赖于这些历史值。
+
+##### 6.2.1 重置函数的数学形式
+
+**论文定义**（Equation 7）：
+
+对于高阶动力学（$k > 1$），重置函数定义为：
+
+$$
+r: \mathbb{R}^{k \times n + m} \to \langle N \rangle^k
+$$
+
+$$
+(\vec{x}[\tau], \vec{x}[\tau-1], \ldots, \vec{x}[\tau-k+1], \vec{u}[\tau]) \mapsto \{N_1, N_2, \ldots, N_k\}
+$$
+
+其中每个 $N_i$ 是一个 NARX 模型，用于生成切换后的第 $i$ 个时间步的状态：
+
+$$
+N_i: (\vec{x}[\tau-1+i], \ldots, \vec{x}[\tau-k+i], \vec{u}[\tau+i]) \mapsto \vec{x}[\tau+i]
+$$
+
+**物理意义**：
+
+- 传统重置（$k=1$）：$\vec{x}'[\tau] = r(\vec{x}[\tau])$，只重置当前状态
+- 高阶重置（$k>1$）：需要生成 $k$ 个连续的新状态 $\vec{x}[\tau], \vec{x}[\tau+1], \ldots, \vec{x}[\tau+k-1]$，以填充新模式的 NARX 模型所需的历史窗口
+
+##### 6.2.2 重置函数的学习过程
+
+**数据准备** (src/Reset.py:14-27)：
+
+```python
+@classmethod
+def from_slice(cls, get_feature: FeatureExtractor, f_list: list[Slice], t_list: list[Slice]):
+    """
+    从切换前后的数据段对学习重置函数
+    
+    参数：
+        f_list: 切换前的数据段列表（from slices）
+        t_list: 切换后的数据段列表（to slices）
+    """
+    # 确定需要生成的时间步数（取最大拟合阶数）
+    fit_order = max(max(s.fit_order for s in t_list))
+    eq_list = []
+    
+    # 为每个时间步 i ∈ [0, fit_order-1] 学习一个 NARX 模型
+    for i in range(fit_order):
+        this_data = []
+        this_input = []
+        
+        # 遍历所有切换事件
+        for f_slice, t_slice in zip(f_list, t_list):
+            # 构造训练数据：拼接切换前后的状态
+            # 特征：[x[τ-k+i], ..., x[τ-1], x[τ], ..., x[τ+i]]
+            this_data.append(np.concatenate((
+                f_slice.data[:, -(get_feature.order - i):],  # 切换前的最后 (order-i) 个点
+                t_slice.data[:, :(i + 1)]                    # 切换后的前 (i+1) 个点
+            ), axis=1))
+            
+            # 输入数据同样拼接
+            this_input.append(np.concatenate((
+                f_slice.input_data[:, -(get_feature.order - i):],
+                t_slice.input_data[:, :(i + 1)]
+            ), axis=1))
+        
+        # 拟合第 i 个 NARX 模型
+        eq_list.append(get_feature(this_data, this_input, is_list=True)[0])
+    
+    return cls(get_feature, fit_order, eq_list)
+```
+
+**数据拼接示例**（假设 `order=3`, `fit_order=2`）：
+
+```
+切换前数据段 f_slice:  [..., x[-3], x[-2], x[-1]]
+切换后数据段 t_slice:  [x[0], x[1], x[2], ...]
+                              ↑ 切换点
+
+学习 N₀（生成 x[0]）：
+  特征窗口：[x[-3], x[-2], x[-1]]  ← 全部来自切换前
+  目标值：  x[0]                   ← 切换后第一个点
+
+学习 N₁（生成 x[1]）：
+  特征窗口：[x[-2], x[-1], x[0]]  ← 部分来自切换前，部分来自切换后
+  目标值：  x[1]                   ← 切换后第二个点
+```
+
+**关键设计洞察**：
+
+1. **渐进式重置**：不是一次性重置所有历史状态，而是逐步生成 $k$ 个新状态
+   - $N_0$ 使用切换前的历史生成 $x[\tau]$
+   - $N_1$ 使用 $x[\tau]$ 和部分历史生成 $x[\tau+1]$
+   - 以此类推，直到填满新模式的历史窗口
+
+2. **跨模式数据融合**：训练数据横跨切换边界，捕捉"从旧模式状态到新模式状态"的转换规律
+
+##### 6.2.3 重置函数的执行
+
+**代码实现** (src/Reset.py:29-40)：
+
+```python
+def __call__(self, state, input_data, var_num):
+    """执行一步重置计算"""
+    res = []
+    for i in range(var_num):
+        # 使用第 cnt 个 NARX 模型计算新状态
+        res.append(np.dot(
+            self.get_feature.get_items(state, input_data, i),  # 特征向量
+            self.eq_list[self.cnt][i]                          # NARX 参数
+        ))
+    self.cnt += 1  # 移动到下一个时间步
+    return res
+
+def valid(self):
+    """检查是否还需要继续重置"""
+    return self.cnt < self.fit_order
+
+def clear(self):
+    """重置计数器"""
+    self.cnt = 0
+```
+
+**在差分方程系统中的应用** (src/DE_System.py:34-50)：
+
+```python
+def next(self, input_val=None):
+    """执行一步仿真"""
+    if input_val is None:
+        input_val = []
+    res = []
+    
+    # 更新输入队列
+    for i in range(self.config.input_num):
+        self.input_data[i].appendleft(input_val[i])
+    
+    # 关键判断：是否处于重置阶段？
+    if self.reset_fun is None or not self.reset_fun.valid():
+        # 正常模式：使用当前模式的 NARX 模型
+        for i in range(self.var_num):
+            res.append(np.dot(
+                self.config.get_items(self.state, self.input_data, i),
+                self.eq[i]
+            ))
+    else:
+        # 重置模式：使用重置函数生成状态
+        res = self.reset_fun(self.state, self.input_data, self.var_num)
+    
+    # 更新状态队列
+    for i in range(self.var_num):
+        self.state[i].pop()
+        self.state[i].appendleft(res[i])
+    
+    return res
+```
+
+**执行流程示意**（`order=3`, `fit_order=2`）：
+
+```
+时刻 τ-1：模式 q₁，状态队列 = [x[-1], x[-2], x[-3]]
+  ↓ 守卫条件触发，切换到模式 q₂
+时刻 τ：  重置阶段（cnt=0）
+  → 调用 reset_fun()，使用 N₀ 生成 x[0]
+  → 状态队列 = [x[0], x[-1], x[-2]]
+时刻 τ+1：重置阶段（cnt=1）
+  → 调用 reset_fun()，使用 N₁ 生成 x[1]
+  → 状态队列 = [x[1], x[0], x[-1]]
+时刻 τ+2：正常阶段（cnt=2, 达到 fit_order）
+  → 使用模式 q₂ 的 NARX 模型生成 x[2]
+  → 状态队列 = [x[2], x[1], x[0]]
+```
+
+##### 6.2.4 重置函数的必要性分析
+
+**何时需要 `need_reset=true`？**
+
+| 系统特性 | 是否需要重置 | 原因 |
+|---------|------------|------|
+| **一阶系统** ($k=1$) | 可选 | 只有当前状态，通常可以直接继承 |
+| **高阶系统** ($k>1$) | **强烈推荐** | 历史状态可能不兼容新模式的动力学 |
+| **连续切换** | 必需 | 状态跳变（如弹跳球速度反转） |
+| **平滑切换** | 可选 | 状态连续（如温控系统） |
+
+**Duffing 振子配置示例** (automata/non_linear/duffing.json:54)：
+
+```json
+{
+  "config": {
+    "order": 2,
+    "need_reset": true,  // ← 因为是二阶系统
+    "kernel": "rbf"
+  }
+}
+```
+
+真实重置规则：`x[1] = x[1] * 0.95`（速度衰减 5%）
+
+**实验观察**：
+- 启用 `need_reset=true`：学习到的重置函数能准确捕捉速度衰减
+- 禁用 `need_reset=false`：切换后的轨迹会出现明显偏差，因为历史状态不匹配新模式
+
+#### 6.3 完整的守卫学习与重置学习流程
+
+**主流程代码** (main.py:47-49)：
+
+```python
+# 5. 学习守卫条件和重置函数
+adj = guard_learning(slice_data, get_feature, config)
+evaluation.recording_time("guard_learning")
+
+# 6. 构建混合自动机
+sys = build_system(slice_data, adj, get_feature)
+```
+
+**构建系统** (src/BuildSystem.py:18-36)：
+
+```python
+def build_system(data: list[Slice], res_adj: dict, get_feature):
+    """从聚类结果和守卫学习结果构建混合自动机"""
+    # 1. 为每个模式收集所有数据段
+    data_of_mode = {}
+    for cur in data:
+        if not cur.valid:
+            continue
+        if data_of_mode.get(cur.mode) is None:
+            data_of_mode[cur.mode] = [[], []]
+        data_of_mode[cur.mode][0].append(cur.data)
+        data_of_mode[cur.mode][1].append(cur.input_data)
+    
+    # 2. 为每个模式拟合 NARX 模型（差分方程系统）
+    mode_list = {}
+    for (mode, cur_list) in data_of_mode.items():
+        feature_list = get_feature(cur_list[0], cur_list[1], is_list=True)[0]
+        mode_list[mode] = DESystem(feature_list, [], [], get_feature)
+    
+    # 3. 构造邻接表（守卫条件 + 重置函数）
+    adj = {}
+    for (u, v), (model, reset_fun) in res_adj.items():
+        if adj.get(u) is None:
+            adj[u] = []
+        # 包装 SVM 模型为可调用函数
+        adj[u].append((v, ModelFun(model), reset_fun))
+    
+    # 4. 返回完整的混合自动机
+    return HybridAutomata(mode_list, adj)
+```
+
+**数据结构总结**：
+
+```python
+HybridAutomata = {
+    mode_list: {
+        mode_id → DESystem(NARX_params, state_queue, input_queue)
+    },
+    adj: {
+        mode_id → [(target_mode, guard_svm, reset_fun), ...]
+    }
+}
+```
+
+#### 6.4 与论文理论的对应关系
+
+| 论文概念 | 代码实现 | 文件位置 |
+|---------|---------|---------|
+| 正样本集 $(q, q')^+$ | `positive_sample[(u, v)]` | GuardLearning.py:26 |
+| 负样本集 $(q, q')^-$ | `negative_sample[u]` | GuardLearning.py:19 |
+| 守卫条件 $g$ | `SVC.predict()` | GuardLearning.py:39-42 |
+| 重置函数 $r$ | `ResetFun.__call__()` | Reset.py:29-34 |
+| NARX 模型 $N_i$ | `eq_list[i]` | Reset.py:26 |
+| 混合自动机 $\hat{H}$ | `HybridAutomata` | BuildSystem.py:36 |
+
+**关键创新点总结**：
+
+1. **守卫学习的巧妙样本构造**：通过"同一模式内的不同切换目标"定义负样本，避免过于简单的分类问题
+2. **高阶重置的渐进式生成**：不是一次性重置，而是通过 $k$ 个 NARX 模型逐步生成新状态序列
+3. **统一的 NARX 框架**：重置函数本身也是 NARX 模型，与模式动力学保持一致的数学形式
+4. **自适应的核函数选择**：通过配置文件灵活选择 SVM 核函数，适应不同复杂度的守卫条件
+
+### 7. Build System（系统构建）
+
+**核心功能**：将前序步骤学习到的所有组件（模式动力学、守卫条件、重置函数）组装成完整的混合自动机。
+
+#### 7.1 系统构建主函数
+
+**函数签名** (BuildSystem.py:18-36)：
+```python
+def build_system(data: list[Slice], res_adj: dict, get_feature) -> HybridAutomata
+```
+
+**输入参数**：
+- `data: list[Slice]`：所有已聚类的数据段（每个段已标记模式 ID）
+- `res_adj: dict[(u,v)] = (svc_model, reset_fun)`：守卫学习的输出，包含：
+  - 键：模式转移边 $(q_u, q_v)$
+  - 值：元组 `(SVC模型, ResetFun对象)`
+- `get_feature: FeatureExtractor`：NARX 特征提取器
+
+**输出**：
+- `HybridAutomata` 对象：可直接用于仿真的混合自动机
+
+#### 7.2 构建流程详解
+
+**步骤 1：按模式聚合数据段** (BuildSystem.py:19-26)
+
+```python
+data_of_mode = {}  # {mode_id: [data_list, input_list]}
+for cur in data:
+    if not cur.valid:  # 跳过无效段
+        continue
+    if data_of_mode.get(cur.mode) is None:
+        data_of_mode[cur.mode] = [[], []]
+    data_of_mode[cur.mode][0].append(cur.data)        # 状态数据
+    data_of_mode[cur.mode][1].append(cur.input_data)  # 输入数据
+```
+
+**数据结构示例**：
+```python
+data_of_mode = {
+    0: [[seg0_data, seg2_data, ...], [seg0_input, seg2_input, ...]],  # 模式 0 的所有段
+    1: [[seg1_data, seg3_data, ...], [seg1_input, seg3_input, ...]],  # 模式 1 的所有段
+}
+```
+
+**步骤 2：为每个模式学习 NARX 模型** (BuildSystem.py:28-30)
+
+```python
+mode_list = {}
+for (mode, cur_list) in data_of_mode.items():
+    # 提取所有段的特征矩阵 Λ（自动合并多个段）
+    feature_list = get_feature(cur_list[0], cur_list[1], is_list=True)[0]
+    # 创建 DESystem（差分方程系统）
+    mode_list[mode] = DESystem(feature_list, [], [], get_feature)
+```
+
+**关键点**：
+- `get_feature(..., is_list=True)` 会自动：
+  1. 将同一模式的多个段拼接成大矩阵
+  2. 执行 LLSQ 求解：$\min \|O - \Lambda \cdot D\|_2$
+  3. 返回学习到的系数矩阵 `feature_list`（即 $\Lambda$）
+
+- `DESystem` 对象封装了：
+  - NARX 系数 `eq`
+  - 状态缓冲区 `state`（存储历史 $k$ 步）
+  - 输入缓冲区 `input_data`
+  - 单步预测函数 `next()`
+
+**步骤 3：构建转移边的邻接表** (BuildSystem.py:31-35)
+
+```python
+adj = {}
+for (u, v), (model, reset_fun) in res_adj.items():
+    if adj.get(u) is None:
+        adj[u] = []
+    # 将 SVC 模型包装为可调用的守卫函数
+    adj[u].append((v, ModelFun(model), reset_fun))
+```
+
+**数据结构转换**：
+```python
+# 输入格式（来自 guard_learning）
+res_adj = {
+    (0, 1): (SVC_model_01, ResetFun_01),
+    (1, 0): (SVC_model_10, ResetFun_10),
+}
+
+# 输出格式（邻接表）
+adj = {
+    0: [(1, guard_fun_01, reset_fun_01)],
+    1: [(0, guard_fun_10, reset_fun_10)],
+}
+```
+
+**步骤 4：实例化混合自动机** (BuildSystem.py:36)
+
+```python
+return HybridAutomata(mode_list, adj)
+```
+
+#### 7.3 关键辅助类：ModelFun
+
+**守卫函数包装器** (BuildSystem.py:10-15)：
+```python
+class ModelFun:
+    def __init__(self, model):
+        self.model = copy.copy(model)  # 深拷贝 SVC 模型
+    
+    def __call__(self, *args):
+        # 将 SVC 的概率输出转换为布尔守卫
+        return self.model.predict([[*args]])[0] > 0.5
+```
+
+**设计意图**：
+- 统一接口：将 SVM 分类器转换为标准的守卫函数 $g: \mathbb{R}^n \to \{0,1\}$
+- 阈值化：`> 0.5` 将软分类转为硬决策
+- 调用方式：`guard_fun(x0, x1, ..., xn)` 返回 `True/False`
+
+#### 7.4 初始状态构造函数
+
+**函数签名** (BuildSystem.py:39-49)：
+```python
+def get_init_state(data_list, mode_map, mode_list, bias) -> list[dict]
+```
+
+**用途**：为仿真准备初始状态（包含模式 ID 和历史状态）
+
+**参数说明**：
+- `data_list`：原始轨迹数据列表
+- `mode_map: dict[str, int]`：模式名称到 ID 的映射（如 `{"mode_A": 0}`）
+- `mode_list`：每条轨迹对应的模式序列
+- `bias`：NARX 模型的阶数（需要 `bias` 步历史）
+
+**实现逻辑**：
+```python
+res = []
+for data, mode in zip(data_list, mode_list):
+    # 查找初始模式 ID
+    if mode_map.get(mode[bias - 1]) is None:
+        raise Exception("unknown mode: " + str(mode[bias - 1]))
+    
+    init_state = {'mode': mode_map[mode[bias - 1]]}
+    
+    # 为每个状态变量提取历史序列（逆序）
+    for i in range(data.shape[0]):
+        # data[i, (bias-1)::-1] 提取 [t_{bias-1}, t_{bias-2}, ..., t_0]
+        init_state['x' + str(i)] = data[i, (bias - 1)::-1]
+    
+    res.append(init_state)
+return res
+```
+
+**输出示例**（order=3 的 2 维系统）：
+```python
+init_state = {
+    'mode': 0,
+    'x0': [x0[2], x0[1], x0[0]],  # 变量 x0 的历史 3 步（逆序）
+    'x1': [x1[2], x1[1], x1[0]],  # 变量 x1 的历史 3 步
+}
+```
+
+#### 7.5 构建的混合自动机结构
+
+**HybridAutomata 类** (HybridAutomata.py:46-56)：
+```python
+class HybridAutomata:
+    def __init__(self, mode_list, adj, init_mode=None):
+        self.mode_state = init_mode       # 当前模式
+        self.mode_list = mode_list        # {mode_id: DESystem}
+        self.adj = adj                    # {mode_id: [(target, guard, reset)]}
+```
+
+**核心方法**：
+
+1. **单步仿真** (HybridAutomata.py:82-110)：
+```python
+def next(self, *args):
+    # 1. 在当前模式执行动力学
+    res = list(self.mode_list[self.mode_state].next(*args))
+    
+    # 2. 检查所有出边的守卫条件
+    for to, fun, reset_val in self.adj.get(self.mode_state, {}):
+        if fun(*res):  # 守卫触发
+            self.mode_state = to
+            # 3. 应用重置函数（如果有）
+            self.mode_list[to].load(self.mode_list[mode_state], reset_val)
+            break
+    
+    return res, mode_state, switched
+```
+
+2. **状态重置** (HybridAutomata.py:112-114)：
+```python
+def reset(self, init_state, dt=None, *args):
+    self.mode_state = init_state.get('mode', self.mode_state)
+    self.mode_list[self.mode_state].reset(init_state, dt, *args)
+```
+
+#### 7.6 DESystem 的内部机制
+
+**差分方程系统** (DE_System.py:10-50)：
+
+**状态管理**：
+```python
+class DESystem:
+    def __init__(self, eq, init_state, input_data, config: FeatureExtractor, reset_fun=None):
+        self.eq = eq.copy()                    # NARX 系数矩阵 Λ
+        self.state = init_state.copy()         # 历史状态队列
+        self.input_data = input_data.copy()    # 历史输入队列
+        self.reset_fun = reset_fun             # 重置函数（可选）
+```
+
+**单步预测**：
+```python
+def next(self, input_val=None):
+    # 1. 更新输入缓冲区
+    for i in range(self.config.input_num):
+        self.input_data[i].appendleft(input_val[i])
+    
+    # 2. 计算下一状态
+    if self.reset_fun is None or not self.reset_fun.valid():
+        # 正常模式：NARX 预测
+        for i in range(self.var_num):
+            res.append(np.dot(self.config.get_items(self.state, self.input_data, i), 
+                             self.eq[i]))
+    else:
+        # 重置模式：使用渐进式重置函数
+        res = self.reset_fun(self.state, self.input_data, self.var_num)
+    
+    # 3. 更新状态缓冲区（FIFO）
+    for i in range(self.var_num):
+        self.state[i].pop()                # 移除最旧的状态
+        self.state[i].appendleft(res[i])   # 添加新状态到队首
+    
+    return res
+```
+
+**关键设计**：
+- 使用 `deque` 实现固定长度的滑动窗口
+- `appendleft()` + `pop()` 保证 FIFO 顺序
+- `get_items()` 自动提取当前窗口的 NARX 特征
+
+#### 7.7 重置函数的集成
+
+**ResetFun 类** (Reset.py:7-41)：
+
+**渐进式重置机制**：
+```python
+class ResetFun:
+    def __init__(self, get_feature, fit_order, eq_list):
+        self.fit_order = fit_order  # 需要 k 步才能完全重置
+        self.eq_list = eq_list      # [Λ_1, Λ_2, ..., Λ_k]
+        self.cnt = 0                # 当前重置步数
+    
+    def __call__(self, state, input_data, var_num):
+        res = []
+        for i in range(var_num):
+            # 使用第 cnt 步的 NARX 模型
+            res.append(np.dot(self.get_feature.get_items(state, input_data, i), 
+                             self.eq_list[self.cnt][i]))
+        self.cnt += 1
+        return res
+    
+    def valid(self):
+        return self.cnt < self.fit_order  # 未完成所有重置步骤
+```
+
+**工作流程**：
+1. 模式切换发生时，`DESystem.load()` 设置 `reset_fun`
+2. 接下来 $k$ 步调用 `next()` 时：
+   - `reset_fun.valid()` 返回 `True`
+   - 使用 `eq_list[cnt]` 而非正常的 `eq`
+   - 每步 `cnt` 自增
+3. $k$ 步后，`valid()` 返回 `False`，恢复正常 NARX 预测
+
+#### 7.8 数据流总结
+
+```
+guard_learning() 输出
+    ↓
+res_adj = {(u,v): (SVC_model, ResetFun)}
+    ↓
+build_system()
+    ↓
+    ├─ 聚合同模式数据段 → data_of_mode
+    ├─ 学习 NARX 系数 → mode_list[mode] = DESystem(Λ)
+    ├─ 包装守卫函数 → adj[u] = [(v, ModelFun(SVC), reset)]
+    └─ 实例化 HybridAutomata(mode_list, adj)
+    ↓
+可仿真的混合自动机
+    ↓
+HybridAutomata.next() 循环调用
+    ↓
+    ├─ DESystem.next() → 模式内动力学
+    ├─ ModelFun(*state) → 守卫检测
+    └─ ResetFun(*state) → 模式切换重置
+```
+
+#### 7.9 与论文符号的对应
+
+| 论文符号 | 代码实现 | 文件位置 |
+|---------|---------|---------|
+| 混合自动机 $\hat{H} = (Q, X, f, E, G, R)$ | `HybridAutomata` | BuildSystem.py:36 |
+| 模式集合 $Q$ | `mode_list: dict[int, DESystem]` | BuildSystem.py:30 |
+| 状态空间 $X$ | `DESystem.state` | DE_System.py:15 |
+| 模式动力学 $f_q$ | `DESystem.eq` (NARX 系数) | DE_System.py:17 |
+| 转移边集合 $E$ | `adj: dict[int, list[tuple]]` | BuildSystem.py:35 |
+| 守卫条件 $G$ | `ModelFun(SVC)` | BuildSystem.py:10-15 |
+| 重置映射 $R$ | `ResetFun` | Reset.py:7-41 |
+| 单步演化 $x[t+1] = f_q(x[t], u[t])$ | `DESystem.next()` | DE_System.py:34-50 |
+| 模式切换 $q' \in \text{Post}(q, x)$ | `HybridAutomata.next()` | HybridAutomata.py:82-110 |
+
+**关键创新点**：
+1. **统一的 NARX 框架**：模式动力学和重置函数都用 NARX 表示，保持数学一致性
+2. **渐进式重置**：不是瞬时跳变，而是用 $k$ 步 NARX 模型平滑过渡
+3. **可组合的架构**：`DESystem`、`ModelFun`、`ResetFun` 独立封装，易于扩展
+4. **高效的状态管理**：用 `deque` 实现 $O(1)$ 的历史窗口更新
+
+### 8. 完整的识别流程
 
 **主流程代码** (main.py:23-47)：
 ```python
@@ -915,7 +1695,7 @@ def run(data_list, input_data, config, evaluation: Evaluation):
 输出：可仿真的混合系统模型
 ```
 
-### 7. 实验配置示例
+### 9. 实验配置示例
 
 **Duffing 振子配置** (automata/non_linear/duffing.json)：
 ```json

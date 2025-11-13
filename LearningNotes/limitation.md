@@ -1,4 +1,4 @@
-算法在进行 run, config 是从JSON文件中读取的，
+算法在进行 run, config 是从JSON文件中读取的，也就意味着，算法的设计依赖人类经验来进行一些提前的设置
 
 - 所有非线性项（other_items）是提前人为设定好的，
   在main.py中：

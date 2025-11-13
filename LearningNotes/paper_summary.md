@@ -624,7 +624,15 @@ def clustering(data: list[Slice], self_loop=False):
         if data[i].isFront:
             last_mode = None
 
-        if Slice.Method == 'fit':  # 默认方法：基于拟合能力
+        # 方法1：基于参数距离的聚类（'dis' 方法）
+        if Slice.Method == 'dis':
+            for j in range(i):
+                if (data[j].mode != last_mode) and (data[i] & data[j]):
+                    data[i].setMode(data[j].mode)
+                if data[i].mode is not None:
+                    break
+        # 方法2：基于拟合能力的聚类（'fit' 方法，默认推荐）
+        else:
             fit_cnt = 0
             # 遍历已识别的所有模式
             for idx, val in mode_dict.items():
@@ -657,23 +665,26 @@ def clustering(data: list[Slice], self_loop=False):
         if not self_loop:
             last_mode = data[i].mode
 
-    # 第二阶段：处理歧义数据段
-    if Slice.Method == 'fit':
-        for s in delay_list:
-            for idx, val in mode_dict.items():
-                # 利用时序信息：优先匹配前一段的模式
-                if not s.isFront and data[s.idx - 1].mode == idx:
-                    continue
-                if s.test_set(val):
-                    s.mode = idx
-                    if len(val) < 3:
-                        mode_dict[idx].append(s)
-                    break
-            # 仍无法匹配 → 创建新模式
-            if s.mode is None or s.mode == -1:
-                s.mode = tot_mode
-                mode_dict[tot_mode] = [s]
-                tot_mode += 1
+    # 'dis' 方法不需要第二阶段处理，直接返回
+    if Slice.Method != 'fit':
+        return
+
+    # 第二阶段：处理歧义数据段（仅用于 'fit' 方法）
+    for s in delay_list:
+        for idx, val in mode_dict.items():
+            # 利用时序信息：跳过前一段的模式（避免自环）
+            if not s.isFront and data[s.idx - 1].mode == idx:
+                continue
+            if s.test_set(val):
+                s.mode = idx
+                if len(val) < 3:
+                    mode_dict[idx].append(s)
+                break
+        # 仍无法匹配 → 创建新模式
+        if s.mode is None or s.mode == -1:
+            s.mode = tot_mode
+            mode_dict[tot_mode] = [s]
+            tot_mode += 1
 ```
 
 **test_set 函数** (src/CurveSlice.py:90-104)：

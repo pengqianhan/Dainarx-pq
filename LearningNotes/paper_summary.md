@@ -600,7 +600,117 @@ def check_valid(self):
 
 ### 5. 基于拟合能力的聚类算法
 
-这是方法的核心创新：**不是比较参数向量的距离，而是测试"能否用同一组 NARX 参数拟合不同数据段"**。
+这是方法的核心创新：**不是比较参数向量的距离，而是测试"能否用同一组 NARX 参数拟合不同数据段"**。聚类算法实现了论文中的**可合并性（Mergeable）**和**最小可合并性（Minimally Mergeable）**概念。
+
+> 💡 **详细分析文档**：完整的聚类算法分析请参见 [clustering_detailed_analysis.md](./clustering_detailed_analysis.md)，包含理论基础、算法流程、数学公式、复杂度分析和可视化示例。
+
+#### 5.1 理论基础
+
+**论文定义**（Definition 11 & 13）：
+
+- **可合并性（Mergeable Traces）**：一组轨迹段集合 $S$ 对于模板 NARX 模型 $N$ 是可合并的，当且仅当存在 $N \in \langle N \rangle$ 使得 $N \models S$
+- **最小可合并性（Minimally Mergeable）**：拟合 $S$ 所需的最小 NARX 阶数 $k_S$ 等于拟合任意单个段的阶数
+
+**判断条件**：
+$$\text{test\_set}(s_i, S_q) = (\text{order\_condition}) \land (\max(\text{err}) < \theta_{\text{fit}})$$
+
+其中：
+- **阶数条件**：$k_{\text{combined}} \leq \max(k_{s_i}, \min_{s \in S_q} k_s)$（最小可合并性）
+- **误差条件**：$\max(\text{err}) < \text{FitErrorThreshold}$（动态校准阈值）
+
+#### 5.2 算法核心：test_set 函数
+
+**核心测试函数** (src/CurveSlice.py:90-104)：
+
+```python
+def test_set(self, other_list):
+    """测试当前数据段能否与 other_list 中的段共同拟合"""
+    # 收集参考段的数据和拟合阶数
+    data, input_data, other_fit_order = [], [], None
+    for s in other_list:
+        data.append(s.data)
+        input_data.append(s.input_data)
+        other_fit_order = min(other_fit_order, s.fit_order) if other_fit_order else s.fit_order
+    
+    # 尝试用单一 NARX 模型拟合当前段+所有参考段
+    _, err, fit_order = self.get_feature(
+        [self.data] + data,
+        [self.input_data] + input_data,
+        is_list=True
+    )
+    
+    # 判断条件1：拟合阶数不增加（最小可合并性）
+    order_condition = all(
+        fit_order[i] <= max(self.fit_order[i], other_fit_order[i])
+        for i in range(len(fit_order))
+    )
+    
+    # 判断条件2：拟合误差小于校准的阈值
+    return order_condition and max(err) < Slice.FitErrorThreshold
+```
+
+**为什么这样设计有效？**
+
+如果两个数据段来自同一个动力学模式 $q$，它们都满足相同的 NARX 方程：
+$$\vec{x}[\tau] = F_q(\vec{x}[\tau-1], ..., \vec{x}[\tau-k], \vec{u}[\tau])$$
+
+因此用单一 NARX 模型联合拟合它们应该：
+1. **不需要增加模型阶数**：同一物理规律下，时间依赖深度应该一致
+2. **拟合误差保持在容忍范围内**：同一动力学方程产生的数据应该能被统一描述
+
+这种判断方式**直接基于物理意义**（动力学方程的一致性），而不是参数空间的几何距离，因此对噪声和参数扰动更鲁棒。
+
+#### 5.3 两种聚类方法
+
+**方法A：距离方法 (`Method == 'dis'`)** - 基于参数向量的 L1 距离
+
+```python
+if Slice.Method == 'dis':
+    for j in range(i):
+        if (data[j].mode != last_mode) and (data[i] & data[j]):
+            data[i].setMode(data[j].mode)
+            break
+```
+
+**`&` 运算符**：比较特征向量的相对距离和绝对距离
+$$v_1 \& v_2 = \text{True} \iff \forall i: (\text{relative\_dis}_i \leq \theta_{\text{rel}}[i]) \lor (\text{dis}_i \leq \theta_{\text{abs}}[i])$$
+
+**方法B：拟合方法 (`Method == 'fit'`)** - **推荐方法**，基于 NARX 可合并性
+
+```python
+else:  # 'fit' 方法
+    fit_cnt = 0
+    for idx, val in mode_dict.items():
+        # 测试：当前数据段能否与该模式的代表段合并拟合？
+        if idx != last_mode and data[i].test_set(val):
+            data[i].mode = idx
+            fit_cnt += 1
+    
+    # 根据匹配结果分配
+    if fit_cnt == 1:
+        if len(mode_dict[data[i].mode]) < 3:
+            mode_dict[data[i].mode].append(data[i])  # 添加为代表段
+    elif fit_cnt > 1:
+        delay_list.append(data[i])  # 歧义，延迟处理
+```
+
+**关键设计**：
+- **代表段限制**：每个模式最多保留3个代表段，平衡准确性和效率
+- **延迟处理**：歧义情况（匹配多个模式）延迟到第二阶段，利用更完整的上下文
+- **时序约束**：通过 `last_mode` 避免连续分段被分到同一模式（除非 `self_loop=True`）
+
+#### 5.4 两种方法对比
+
+| 特性 | 距离方法 (`dis`) | 拟合方法 (`fit`) |
+|------|-----------------|------------------|
+| **判断依据** | 参数向量的 L1 距离 | NARX 模型的可合并性 |
+| **理论基础** | 几何距离 | 物理意义（最小可合并性） |
+| **计算复杂度** | 低（$O(d)$） | 中等（$O(w \cdot d^2)$） |
+| **鲁棒性** | 对噪声敏感 | 对噪声鲁棒 |
+| **延迟处理** | 无 | 有（第二阶段） |
+| **推荐场景** | 快速原型 | 生产环境 |
+
+**推荐使用 `fit` 方法**：直接对应论文理论，基于物理意义，对噪声鲁棒。
 
 **代码实现** (src/Clustering.py:4-61)：
 ```python

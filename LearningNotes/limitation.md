@@ -43,7 +43,7 @@ FeatureExtractor(len(data_list[0]), len(input_data[0]),
 
 ---
 
-### 1.2 滑动窗口大小 (window_size) - 【关键】
+### 1.2 滑动窗口大小 (window_size) - 【中等】
 
 **位置:** `src/ChangePoints.py:16-31`
 

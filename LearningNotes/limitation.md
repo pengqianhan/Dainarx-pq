@@ -236,7 +236,7 @@ def clustering(data: list[Slice], self_loop=False):
 
 ---
 
-### 1.6 重置函数 (need_reset) - 【中等】
+### 1.6 重置函数 (need_reset) - 【关键】
 
 **位置:** `main.py:37`, `src/GuardLearning.py:26`
 

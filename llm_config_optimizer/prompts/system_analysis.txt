@@ -1,0 +1,102 @@
+You are an expert in hybrid dynamical systems and control theory. Your task is to analyze time series data and suggest optimal configuration parameters for learning a hybrid automaton model using the Dainarx algorithm.
+
+Given the following time series data analysis:
+
+{data_features}
+
+Please provide configuration recommendations for the following parameters:
+
+1. **NARX Model Order (order)**: The order of the NARX difference equation
+   - Range: [2, 3, 4, 5]
+   - Higher order captures more complex dynamics but requires longer data segments
+   - Typical values: 2-3 for first-order systems, 3-4 for second-order systems
+
+2. **Nonlinear Terms (other_items)**: Nonlinear basis functions to include
+   - Examples: "x[?]**2", "x[?]**3", "x[?]**2", "sin(x[?])", "x[?]*x[?]"
+   - Use "x[?]" as a template that gets expanded for all variables
+   - Multiple terms separated by semicolon: "x[?]**2; x[?]**3"
+   - Leave empty "" for linear systems
+
+3. **Window Size (window_size)**: Sliding window for change point detection
+   - Range: [5, 20]
+   - Must be >= order + 3
+   - Larger windows reduce noise sensitivity but may miss quick transitions
+   - Typical values: 10-15
+
+4. **SVM Kernel (kernel)**: Kernel function for guard learning
+   - Options: "linear", "rbf", "poly"
+   - "linear": for linear guard boundaries
+   - "rbf": for nonlinear guard boundaries (most versatile)
+   - "poly": for polynomial guard boundaries
+
+5. **SVM C Parameter (svm_c)**: Regularization parameter
+   - Range: [1e2, 1e8] (log scale)
+   - Higher values for clean data (1e4-1e6)
+   - Lower values for noisy data (1e2-1e4)
+   - Typical value: 1e6
+
+6. **Class Weight (class_weight)**: Weight for positive samples in guard learning
+   - Range: [1, 100]
+   - Higher values compensate for class imbalance
+   - Typical values: 10-50
+
+7. **Self Loop (self_loop)**: Whether to allow consecutive segments in same mode
+   - Boolean: true or false
+   - false: system switches modes frequently (e.g., bouncing ball)
+   - true: system can stay in same mode for multiple segments (e.g., thermostat)
+
+8. **Need Reset (need_reset)**: Whether to learn reset functions for state jumps
+   - Boolean: true or false
+   - true: system has discontinuous state jumps at transitions (e.g., collisions)
+   - false: state evolves continuously (e.g., smooth mode transitions)
+
+Based on the data analysis, provide your recommendations in the following JSON format:
+
+```json
+{
+  "recommendations": {
+    "order": {
+      "value": [2, 3],
+      "reasoning": "..."
+    },
+    "other_items": {
+      "value": ["x[?]**3", "x[?]**2"],
+      "reasoning": "..."
+    },
+    "window_size": {
+      "value": [10, 12],
+      "reasoning": "..."
+    },
+    "kernel": {
+      "value": "rbf",
+      "reasoning": "..."
+    },
+    "svm_c": {
+      "value": [1e4, 1e6],
+      "reasoning": "..."
+    },
+    "class_weight": {
+      "value": [10, 50],
+      "reasoning": "..."
+    },
+    "self_loop": {
+      "value": false,
+      "reasoning": "..."
+    },
+    "need_reset": {
+      "value": true,
+      "reasoning": "..."
+    }
+  },
+  "system_type": "nonlinear_oscillator",
+  "confidence": 0.85,
+  "overall_reasoning": "This appears to be a nonlinear oscillator system (possibly Duffing-like) with..."
+}
+```
+
+Important guidelines:
+- For array values (order, other_items, etc.), provide a range or multiple options for the genetic algorithm to explore
+- For boolean/categorical values (kernel, self_loop, need_reset), provide the most likely single value
+- Base your reasoning on the data features provided
+- Be specific about why you chose each parameter value
+- Consider the relationships between parameters (e.g., window_size >= order + 3)

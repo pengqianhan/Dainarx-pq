@@ -261,3 +261,50 @@
 | | | 2 -> 1 | `x1 * x1 + x2 * x2 >= 710000` | ✗ |
 | `non_linear\sys_bio.json` | 1 | 1 -> 2 | `x1 > 1.5` | ✗ |
 
+## 6. Mode统计
+
+- **包含mode字段的文件数**: 27
+- **Mode的总数**: 72
+
+### 6.1 Mode数量分布
+
+| Mode数量 | 文件数 | 文件列表 |
+|---------|--------|----------|
+| 1 | 1 | `ATVA\ball.json` |
+| 2 | 17 | `ATVA\oci.json`, `FaMoS\simple_heating_system.json`, `FaMoS\two_state_ha.json`, `linear\dc_motor_position_PID.json`, `linear\linear_1.json`, `linear\one_legged_jumper.json`, `linear\two_tank.json`, `linear\underdamped_system.json`, `non_linear\duffing.json`, `non_linear\duffing_simulate.json`, `non_linear\lander.json`, `non_linear\lotkaVolterra.json`, `non_linear\oscillator.json`, `non_linear\simple_non_linear.json`, `non_linear\simple_non_poly.json`, `non_linear\spacecraft.json`, `non_linear\sys_bio.json` |
+| 3 | 3 | `FaMoS\buck_converter.json`, `FaMoS\three_state_ha.json`, `FaMoS\variable_heating_system.json` |
+| 4 | 5 | `ATVA\cell.json`, `ATVA\tanks.json`, `FaMoS\multi_room_heating.json`, `linear\complex_underdamped_system.json`, `linear\loop.json` |
+| 8 | 1 | `FaMoS\complex_tank.json` |
+
+### 6.2 各文件Mode详情
+
+| 文件 | Mode数量 |
+|------|---------|
+| `ATVA\ball.json` | 1 |
+| `ATVA\cell.json` | 4 |
+| `ATVA\oci.json` | 2 |
+| `ATVA\tanks.json` | 4 |
+| `FaMoS\buck_converter.json` | 3 |
+| `FaMoS\complex_tank.json` | 8 |
+| `FaMoS\multi_room_heating.json` | 4 |
+| `FaMoS\simple_heating_system.json` | 2 |
+| `FaMoS\three_state_ha.json` | 3 |
+| `FaMoS\two_state_ha.json` | 2 |
+| `FaMoS\variable_heating_system.json` | 3 |
+| `linear\complex_underdamped_system.json` | 4 |
+| `linear\dc_motor_position_PID.json` | 2 |
+| `linear\linear_1.json` | 2 |
+| `linear\loop.json` | 4 |
+| `linear\one_legged_jumper.json` | 2 |
+| `linear\two_tank.json` | 2 |
+| `linear\underdamped_system.json` | 2 |
+| `non_linear\duffing.json` | 2 |
+| `non_linear\duffing_simulate.json` | 2 |
+| `non_linear\lander.json` | 2 |
+| `non_linear\lotkaVolterra.json` | 2 |
+| `non_linear\oscillator.json` | 2 |
+| `non_linear\simple_non_linear.json` | 2 |
+| `non_linear\simple_non_poly.json` | 2 |
+| `non_linear\spacecraft.json` | 2 |
+| `non_linear\sys_bio.json` | 2 |
+

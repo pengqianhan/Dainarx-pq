@@ -165,41 +165,153 @@ def analyze_edges_in_json(json_file_path):
         return None
 
 
+def extract_equation_terms(equation):
+    """
+    从方程字符串中提取项（不包含系数）
+
+    Args:
+        equation: 方程字符串，例如 "x[2] = u - 0.5 * x[1] + x[0] - 1.5 * x[0] ** 3"
+
+    Returns:
+        list: 提取出的项列表（不包含系数），例如 ['u', 'x[1]', 'x[0]', 'x[0]**3']
+    """
+    import re
+
+    # 提取等号右边的部分
+    if '=' in equation:
+        right_side = equation.split('=', 1)[1].strip()
+    else:
+        right_side = equation.strip()
+
+    # 按照加减号分割，保留符号
+    # 先替换减号为 +- 以便统一处理
+    right_side = right_side.replace('-', '+-')
+
+    # 分割成项
+    raw_terms = [t.strip() for t in right_side.split('+') if t.strip()]
+
+    normalized_terms = []
+    for term in raw_terms:
+        # 去除前导的负号（我们只关心项的结构，不关心符号）
+        term = term.lstrip('-').strip()
+        if not term:
+            continue
+
+        # 去除数字系数
+        # 模式1: 纯数字开头后跟 * (例如: "0.5 * x[1]" -> "x[1]")
+        term = re.sub(r'^[\d.]+\s*\*\s*', '', term)
+
+        # 模式2: 去除空格，标准化
+        term = term.replace(' ', '')
+
+        # 去除多余的乘号前的数字系数（如果还有）
+        # 例如: "2*x[0]" -> "x[0]"
+        term = re.sub(r'^\d+\.?\d*\*', '', term)
+
+        if term and term not in normalized_terms:
+            normalized_terms.append(term)
+
+    return sorted(normalized_terms)
+
+
+def analyze_mode_equations(json_file_path):
+    """
+    分析单个JSON文件中各个mode的方程项
+
+    Args:
+        json_file_path: JSON文件路径
+
+    Returns:
+        dict: 包含mode方程分析信息的字典
+    """
+    try:
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # 检查是否有automaton.mode字段
+        if 'automaton' not in data or 'mode' not in data['automaton']:
+            return None
+
+        modes = data['automaton']['mode']
+        if not isinstance(modes, list) or len(modes) == 0:
+            return None
+
+        mode_info = {
+            'mode_count': len(modes),
+            'modes': [],
+            'all_terms': set(),
+            'terms_consistent': True,
+            'first_mode_terms': None
+        }
+
+        for mode in modes:
+            mode_id = mode.get('id', 'unknown')
+            equation = mode.get('eq', '')
+
+            if equation:
+                terms = extract_equation_terms(equation)
+                mode_info['modes'].append({
+                    'id': mode_id,
+                    'equation': equation,
+                    'terms': terms
+                })
+
+                # 收集所有项
+                mode_info['all_terms'].update(terms)
+
+                # 检查项的一致性
+                if mode_info['first_mode_terms'] is None:
+                    mode_info['first_mode_terms'] = set(terms)
+                else:
+                    if set(terms) != mode_info['first_mode_terms']:
+                        mode_info['terms_consistent'] = False
+
+        # 转换set为sorted list
+        mode_info['all_terms'] = sorted(mode_info['all_terms'])
+        mode_info['first_mode_terms'] = sorted(mode_info['first_mode_terms']) if mode_info['first_mode_terms'] else []
+
+        return mode_info
+
+    except Exception as e:
+        print(f"Error analyzing mode equations in {json_file_path}: {e}")
+        return None
+
+
 def extract_condition_pattern(condition):
     """
     从条件表达式中提取模式类型
-    
+
     Args:
         condition: 条件表达式字符串
-        
+
     Returns:
         list: 识别出的模式类型列表
     """
     patterns = []
-    
+
     # 简单比较: var op value
     if ' <= ' in condition or ' >= ' in condition or ' < ' in condition or ' > ' in condition:
         patterns.append('comparison')
-    
+
     # 等式判断
     if ' == ' in condition or ' != ' in condition:
         patterns.append('equality')
-    
+
     # 复合条件
     if ' and ' in condition:
         patterns.append('compound_and')
     if ' or ' in condition:
         patterns.append('compound_or')
-    
+
     # 函数调用
     if 'abs(' in condition:
         patterns.append('abs_function')
-    
+
     # 变量间比较 (如 x1 - x2 < 3)
     import re
     if re.search(r'[a-zA-Z]\d*\s*-\s*[a-zA-Z]\d*', condition):
         patterns.append('var_difference')
-    
+
     return patterns if patterns else ['simple']
 
 
@@ -223,7 +335,7 @@ def find_all_json_files(root_dir):
 
 def generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
-                            all_config_keys, edge_stats=None, mode_stats=None):
+                            all_config_keys, edge_stats=None, mode_stats=None, equation_stats=None):
     """
     生成Markdown格式的分析报告
 
@@ -239,6 +351,7 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
         all_config_keys: 所有出现过的config键集合
         edge_stats: edge条件统计信息
         mode_stats: mode数量统计信息
+        equation_stats: mode方程分析统计信息
     """
     report_path = Path(__file__).parent / "json_analysis_report.md"
 
@@ -448,14 +561,14 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
             total_modes = sum(mode_stats.values())
             f.write(f"- **包含mode字段的文件数**: {len(mode_stats)}\n")
             f.write(f"- **Mode的总数**: {total_modes}\n\n")
-            
+
             # 按mode数量分组统计
             mode_count_distribution = {}
             for file_path, count in mode_stats.items():
                 if count not in mode_count_distribution:
                     mode_count_distribution[count] = []
                 mode_count_distribution[count].append(file_path)
-            
+
             f.write("### 6.1 Mode数量分布\n\n")
             f.write("| Mode数量 | 文件数 | 文件列表 |\n")
             f.write("|---------|--------|----------|\n")
@@ -464,7 +577,7 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
                 files_str = ", ".join([f"`{f}`" for f in sorted(files)])
                 f.write(f"| {count} | {len(files)} | {files_str} |\n")
             f.write("\n")
-            
+
             f.write("### 6.2 各文件Mode详情\n\n")
             f.write("| 文件 | Mode数量 |\n")
             f.write("|------|---------|\n")
@@ -473,6 +586,90 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
             f.write("\n")
         else:
             f.write("*无mode数据*\n\n")
+
+        # Mode方程分析
+        f.write("## 7. Mode方程项分析\n\n")
+        if equation_stats:
+            # 基本统计
+            files_with_equations = len(equation_stats)
+            consistent_count = sum(1 for info in equation_stats.values() if info['terms_consistent'])
+            inconsistent_count = files_with_equations - consistent_count
+
+            f.write("### 7.1 方程项一致性统计\n\n")
+            f.write(f"- **包含方程的文件数**: {files_with_equations}\n")
+            f.write(f"- **所有mode方程项一致的文件数**: {consistent_count}\n")
+            f.write(f"- **存在mode方程项不一致的文件数**: {inconsistent_count}\n\n")
+
+            # 方程项一致性分类
+            if consistent_count > 0:
+                f.write("#### 方程项一致的文件:\n\n")
+                for file_path in sorted(equation_stats.keys()):
+                    info = equation_stats[file_path]
+                    if info['terms_consistent']:
+                        terms_str = ", ".join([f"`{t}`" for t in info['all_terms']])
+                        f.write(f"- ✓ `{file_path}` (共 {info['mode_count']} 个mode): {terms_str}\n")
+                f.write("\n")
+
+            if inconsistent_count > 0:
+                f.write("#### 方程项不一致的文件:\n\n")
+                for file_path in sorted(equation_stats.keys()):
+                    info = equation_stats[file_path]
+                    if not info['terms_consistent']:
+                        f.write(f"- ✗ `{file_path}` (共 {info['mode_count']} 个mode)\n")
+                f.write("\n")
+
+            # 收集所有出现过的项
+            f.write("### 7.2 所有方程项汇总\n\n")
+            all_terms_global = set()
+            for info in equation_stats.values():
+                all_terms_global.update(info['all_terms'])
+
+            if all_terms_global:
+                f.write("在所有automaton的方程中，出现过的所有项（不含系数）：\n\n")
+                for term in sorted(all_terms_global):
+                    # 统计该项出现在多少个文件中
+                    files_with_term = [fp for fp, info in equation_stats.items() if term in info['all_terms']]
+                    f.write(f"- `{term}` (出现在 {len(files_with_term)} 个文件中)\n")
+                f.write("\n")
+
+            # 详细方程表
+            f.write("### 7.3 详细方程列表\n\n")
+            for file_path in sorted(equation_stats.keys()):
+                info = equation_stats[file_path]
+                consistency_icon = "✓ 一致" if info['terms_consistent'] else "✗ 不一致"
+                f.write(f"#### `{file_path}` ({consistency_icon})\n\n")
+
+                f.write("| Mode ID | 方程 | 提取的项（不含系数） |\n")
+                f.write("|---------|------|----------------------|\n")
+                for mode in info['modes']:
+                    mode_id = mode['id']
+                    equation = mode['equation']
+                    terms = mode['terms']
+                    terms_str = ", ".join([f"`{t}`" for t in terms])
+                    f.write(f"| {mode_id} | `{equation}` | {terms_str} |\n")
+                f.write("\n")
+
+                # 如果不一致，显示差异
+                if not info['terms_consistent']:
+                    f.write("**差异分析**:\n\n")
+                    for mode in info['modes']:
+                        mode_terms = set(mode['terms'])
+                        first_terms = set(info['first_mode_terms'])
+
+                        only_in_current = mode_terms - first_terms
+                        only_in_first = first_terms - mode_terms
+
+                        if only_in_current or only_in_first:
+                            f.write(f"- Mode {mode['id']}:\n")
+                            if only_in_current:
+                                terms_str = ", ".join([f"`{t}`" for t in sorted(only_in_current)])
+                                f.write(f"  - 独有项: {terms_str}\n")
+                            if only_in_first:
+                                terms_str = ", ".join([f"`{t}`" for t in sorted(only_in_first)])
+                                f.write(f"  - 缺少项: {terms_str}\n")
+                    f.write("\n")
+        else:
+            f.write("*无方程数据*\n\n")
 
     print(f"\n📄 分析报告已保存到: {report_path}")
     return report_path
@@ -502,6 +699,7 @@ def main():
     all_config_keys = set()
     edge_stats = {}
     mode_stats = {}  # 统计每个文件的mode数量
+    equation_stats = {}  # 统计每个文件的mode方程
 
     for json_file in json_files:
         # 统计input字段
@@ -554,6 +752,11 @@ def main():
         if mode_count > 0:
             mode_stats[rel_path] = mode_count
 
+        # 分析mode方程
+        equation_info = analyze_mode_equations(json_file)
+        if equation_info:
+            equation_stats[rel_path] = equation_info
+
     # 打印统计结果
     print("=" * 80)
     print(f"\n统计结果:")
@@ -591,10 +794,17 @@ def main():
     for file_path, count in sorted(mode_stats.items()):
         print(f"    {file_path}: {count}")
 
+    # 打印Mode方程分析结果
+    print(f"\nMode方程分析:")
+    print(f"  包含方程的文件数: {len(equation_stats)}")
+    consistent_count = sum(1 for info in equation_stats.values() if info['terms_consistent'])
+    print(f"  方程项一致的文件数: {consistent_count}")
+    print(f"  方程项不一致的文件数: {len(equation_stats) - consistent_count}")
+
     # 生成Markdown报告
     generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
-                            all_config_keys, edge_stats, mode_stats)
+                            all_config_keys, edge_stats, mode_stats, equation_stats)
 
 
 if __name__ == "__main__":

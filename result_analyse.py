@@ -238,7 +238,7 @@ def main():
     result_dirs = {
         "order3": "result_oder3",
         "x4": "result_x4",
-        "baseline": "result0",
+        "baseline": "result",
     }
 
     # Run comparison

@@ -152,6 +152,103 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             state_id += 1
 
 
+def plot_all(automata_dir: str = "automata",
+             output_dir: str = "data_plot",
+             save_npz: bool = False) -> None:
+    """
+    Generate plots for all JSON automata files in the automata directory.
+
+    :param automata_dir: Root directory containing automata JSON files.
+    :param output_dir: Output directory for plots (mirrors automata_dir structure).
+    :param save_npz: Whether to save NPZ data files (default: False).
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if not os.path.isabs(automata_dir):
+        automata_dir = os.path.join(current_dir, automata_dir)
+    if not os.path.isabs(output_dir):
+        output_dir = os.path.join(current_dir, output_dir)
+
+    # Find all JSON files in automata directory
+    json_files = []
+    for root, _, files in os.walk(automata_dir):
+        for file in files:
+            if file.endswith('.json'):
+                json_files.append(os.path.join(root, file))
+
+    print(f"Found {len(json_files)} JSON files in {automata_dir}")
+
+    for json_path in json_files:
+        # Compute relative path to maintain directory structure
+        rel_path = os.path.relpath(json_path, automata_dir)
+        # Replace .json with empty string to get base name
+        base_name = os.path.splitext(rel_path)[0]
+        # Create output subdirectory path
+        output_subdir = os.path.join(output_dir, base_name)
+
+        print(f"Processing: {rel_path}")
+
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+
+            # Get config parameters with defaults
+            config = data.get('config', {})
+            dt = config.get('dt', 0.01)
+            total_time = config.get('total_time', 10.0)
+
+            sys = HybridAutomata.from_json(data['automaton'])
+            system_title = os.path.splitext(os.path.basename(json_path))[0]
+
+            # Create output directory
+            os.makedirs(output_subdir, exist_ok=True)
+
+            state_id = 0
+            cnt = 0
+            for init_state in data['init_state']:
+                cnt += 1
+                state_data = []
+                mode_data = []
+                input_data = []
+                change_points = [0]
+                sys.reset(init_state)
+                now = 0.
+                idx = 0
+                while now < total_time:
+                    now += dt
+                    idx += 1
+                    state, mode, switched = sys.next(dt)
+                    state_data.append(state)
+                    mode_data.append(mode)
+                    input_data.append(sys.getInput())
+                    if switched:
+                        change_points.append(idx)
+                change_points.append(idx)
+                state_data = np.transpose(np.array(state_data))
+                input_data = np.transpose(np.array(input_data))
+                mode_data = np.array(mode_data)
+
+                # Plot and save figure
+                figure_path = os.path.join(output_subdir, f"sample_{state_id}.png")
+                plot_fun(state_data, input_data, dt, system_name=system_title,
+                         sample_index=cnt, save_path=figure_path, show=False)
+
+                # Optionally save NPZ data
+                if save_npz:
+                    np.savez(os.path.join(output_subdir, f"test_data{state_id}"),
+                             state=state_data, mode=mode_data, input=input_data,
+                             change_points=change_points)
+
+                state_id += 1
+
+            print(f"  -> Generated {state_id} plots in {output_subdir}")
+
+        except Exception as e:
+            print(f"  -> Error processing {rel_path}: {e}")
+
+    print(f"\nAll plots saved to {output_dir}")
+
+
 if __name__ == "__main__":
     # creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
     # creat_data('automata/ATVA/ball.json', 'data_ball', 0.001, 10)

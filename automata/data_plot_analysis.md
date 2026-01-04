@@ -1,6 +1,6 @@
 # Data Plot Analysis
 
-1. transition happents not apparently in the image 
+1. transition happents ,but not apparently in the image 
 - FaMoS
   - tree_state_ha
   - two_state_ha

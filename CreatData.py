@@ -165,7 +165,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             # print("mode_data.shape: ", mode_data.shape)
             # print("input_data.shape: ", input_data.shape)
             # print("change_points.shape: ", len(change_points))
-            state_data = add_gaussian_noise(state_data, noise_std=0.1)# 添加高斯噪声
+            # state_data = add_gaussian_noise(state_data, noise_std=0.1)# 添加高斯噪声, 可选。但是添加这行之后main.py 会报错
             '''
             ball
             state_data.shape:  (2, 1001)

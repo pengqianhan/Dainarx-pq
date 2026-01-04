@@ -8,6 +8,45 @@ from src.HybridAutomata import HybridAutomata
 import json
 
 
+def add_gaussian_noise(state_data: np.ndarray,
+                       noise_std: float = 0.01,
+                       snr_db: Optional[float] = None) -> np.ndarray:
+    """
+    Add Gaussian noise to state data.
+
+    :param state_data: Input state data with shape (num_states, num_steps)
+    :param noise_std: Standard deviation of the noise (used if snr_db is None); noisy_state = add_gaussian_noise(state_data, noise_std=0.01)
+
+    :param snr_db: Signal-to-noise ratio in dB. If provided, noise_std is calculated
+                   based on the signal power to achieve the target SNR. ;noisy_state = add_gaussian_noise(state_data, snr_db=20)  # 20dB SNR
+    # 40dB: 非常干净
+    # 20dB: 中等噪声
+    # 10dB: 较大噪声
+    :return: Noisy state data with the same shape as input
+    """
+    if state_data.ndim != 2:
+        raise ValueError("state_data must be a 2D array with shape (num_states, num_steps)")
+
+    noisy_data = np.copy(state_data)
+
+    if snr_db is not None:
+        # Calculate noise std based on SNR for each state variable
+        for i in range(state_data.shape[0]):
+            signal = state_data[i]
+            signal_power = np.mean(signal ** 2)
+            snr_linear = 10 ** (snr_db / 10)
+            noise_power = signal_power / snr_linear
+            std = np.sqrt(noise_power)
+            noise = np.random.normal(0, std, signal.shape)
+            noisy_data[i] = signal + noise
+    else:
+        # Use fixed noise standard deviation
+        noise = np.random.normal(0, noise_std, state_data.shape)
+        noisy_data = state_data + noise
+
+    return noisy_data
+
+
 def plot_fun(state_data: np.ndarray,
              input_data: np.ndarray,
              dt: float,
@@ -126,6 +165,7 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             # print("mode_data.shape: ", mode_data.shape)
             # print("input_data.shape: ", input_data.shape)
             # print("change_points.shape: ", len(change_points))
+            state_data = add_gaussian_noise(state_data, noise_std=0.1)# 添加高斯噪声
             '''
             ball
             state_data.shape:  (2, 1001)
@@ -250,7 +290,7 @@ def plot_all(automata_dir: str = "automata",
 
 
 if __name__ == "__main__":
-    # creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
+    creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
     # creat_data('automata/ATVA/ball.json', 'data_ball', 0.001, 10)
     # creat_data('automata/non_linear/lander.json', 'data_lander', 0.01, 10)
-    creat_data('automata/FaMoS/three_state_ha.json', 'data_three_state_ha', 0.001, 10)#json 中"need_reset": false 或者 true 生成的数据是一样的
+    # creat_data('automata/FaMoS/three_state_ha.json', 'data_three_state_ha', 0.001, 10)#json 中"need_reset": false 或者 true 生成的数据是一样的

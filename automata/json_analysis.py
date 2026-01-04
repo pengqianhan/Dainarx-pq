@@ -465,7 +465,14 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
             f.write("### 5.1 基本统计\n\n")
             f.write(f"- **包含edge字段的文件数**: {files_with_edges}\n")
             f.write(f"- **边的总数**: {total_edges}\n")
-            f.write(f"- **包含reset的文件数**: {files_with_reset}\n\n")
+
+            # 收集包含reset的文件列表
+            files_with_reset_list = [fp for fp, info in edge_stats.items() if any(info['has_reset'])]
+            f.write(f"- **包含reset的文件数**: {files_with_reset}\n")
+            if files_with_reset_list:
+                for file in sorted(files_with_reset_list):
+                    f.write(f"  - `{file}`\n")
+            f.write("\n")
             
             # 操作符统计
             f.write("### 5.2 条件操作符统计\n\n")

@@ -60,7 +60,8 @@
 
 | Need_reset值 | 文件数量 | 文件列表 |
 |--------------|---------|----------|
-| True | 10 | `ATVA/ball.json`<br>`FaMoS/three_state_ha.json`<br>`FaMoS/two_state_ha.json`<br>`linear/complex_underdamped_system.json`<br>`linear/dc_motor_position_PID.json`<br>`linear/loop.json`<br>`linear/underdamped_system.json`<br>`non_linear/duffing.json`<br>`non_linear/duffing_simulate.json`<br>`non_linear/simple_non_poly.json` |
+| False | 1 | `FaMoS/three_state_ha.json` |
+| True | 9 | `ATVA/ball.json`<br>`FaMoS/two_state_ha.json`<br>`linear/complex_underdamped_system.json`<br>`linear/dc_motor_position_PID.json`<br>`linear/loop.json`<br>`linear/underdamped_system.json`<br>`non_linear/duffing.json`<br>`non_linear/duffing_simulate.json`<br>`non_linear/simple_non_poly.json` |
 | null | 17 | `ATVA/cell.json`<br>`ATVA/oci.json`<br>`ATVA/tanks.json`<br>`FaMoS/buck_converter.json`<br>`FaMoS/complex_tank.json`<br>`FaMoS/multi_room_heating.json`<br>`FaMoS/simple_heating_system.json`<br>`FaMoS/variable_heating_system.json`<br>`linear/linear_1.json`<br>`linear/one_legged_jumper.json`<br>`linear/two_tank.json`<br>`non_linear/lander.json`<br>`non_linear/lotkaVolterra.json`<br>`non_linear/oscillator.json`<br>`non_linear/simple_non_linear.json`<br>`non_linear/spacecraft.json`<br>`non_linear/sys_bio.json` |
 
 ### 3.3 Kernel参数
@@ -99,7 +100,7 @@
 | `FaMoS/complex_tank.json` | 1 | null | null | `dt`, `total_time`, `window_size`, `class_weight`, `svm_c` |
 | `FaMoS/multi_room_heating.json` | 1 | null | rbf | `dt`, `total_time`, `window_size`, `class_weight` |
 | `FaMoS/simple_heating_system.json` | 1 | null | null | `dt`, `total_time`, `class_weight` |
-| `FaMoS/three_state_ha.json` | 2 | True | null | `dt`, `total_time`, `need_bias` |
+| `FaMoS/three_state_ha.json` | 2 | False | null | `dt`, `total_time`, `need_bias` |
 | `FaMoS/two_state_ha.json` | 2 | True | null | `dt`, `total_time`, `need_bias` |
 | `FaMoS/variable_heating_system.json` | 1 | null | null | `dt`, `total_time`, `class_weight` |
 | `linear/complex_underdamped_system.json` | 2 | True | null | `dt`, `total_time`, `minus` |
@@ -126,6 +127,11 @@
 - **包含edge字段的文件数**: 27
 - **边的总数**: 99
 - **包含reset的文件数**: 5
+  - `ATVA/ball.json`
+  - `linear/complex_underdamped_system.json`
+  - `non_linear/duffing.json`
+  - `non_linear/duffing_simulate.json`
+  - `non_linear/simple_non_poly.json`
 
 ### 5.2 条件操作符统计
 

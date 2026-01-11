@@ -1,0 +1,1 @@
+{"name": "./automata/non_linear/duffing.json", "train_tc": 0.0, "clustering_error": 0, "tc": 0.001, "max_diff": 0.000795236908631381, "mean_diff": 3.204673703132675e-05, "time": [["change_points", 4.726413726806641], ["clustering", 2.770616054534912], ["guard_learning", 0.05183124542236328], ["total", 7.956310749053955]]}

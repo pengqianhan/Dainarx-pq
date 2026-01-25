@@ -252,7 +252,7 @@ class HybridSimulator:
 
 def create_duffing_automaton() -> HybridAutomaton:
     """
-    Create the Duffing-like hybrid automaton with two modes
+    Create the Duffing-like hybrid automaton with two modes 
     
     Mode 1: ẍ = u - 0.5ẋ + x - 1.5x³
     Mode 2: ẍ = u - 0.2ẋ + x - 0.5x³

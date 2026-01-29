@@ -290,7 +290,7 @@ def plot_all(automata_dir: str = "automata",
 
 
 if __name__ == "__main__":
-    creat_data('automata/non_linear/duffing.json', 'data_duffing', 0.001, 10)
+    creat_data('automata/non_linear/sys_bio.json', 'data_sys_bio', 0.001, 10)
     # creat_data('automata/ATVA/ball.json', 'data_ball', 0.001, 10)
     # creat_data('automata/non_linear/lander.json', 'data_lander', 0.01, 10)
     # creat_data('automata/FaMoS/three_state_ha.json', 'data_three_state_ha', 0.001, 10)#json 中"need_reset": false 或者 true 生成的数据是一样的

@@ -195,7 +195,7 @@ if __name__ == "__main__":
     if not os.path.exists(result_path):
         os.makedirs(result_path)
     
-    eval_log = main("./automata/non_linear/duffing.json")
+    eval_log = main("automata/non_linear/sys_bio.json")
 
     with open(os.path.join(result_path, "eval_log.json"), "w") as f:
         json.dump(eval_log, f)

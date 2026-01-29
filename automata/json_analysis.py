@@ -78,6 +78,7 @@ def analyze_config_in_json(json_file_path):
                 'order': config.get('order'),
                 'need_reset': config.get('need_reset'),
                 'kernel': config.get('kernel'),
+                'total_time': config.get('total_time'),
                 'all_keys': list(config.keys())
             }
             return result
@@ -85,6 +86,52 @@ def analyze_config_in_json(json_file_path):
     except Exception as e:
         print(f"Error reading {json_file_path}: {e}")
         return None
+
+
+def get_total_time_stats(config_stats):
+    """
+    从config统计信息中提取total_time的统计数据
+
+    Args:
+        config_stats: 包含所有文件config信息的字典
+
+    Returns:
+        dict: total_time统计信息，包含:
+            - value_distribution: 按值分组的文件列表
+            - min_value: 最小值
+            - max_value: 最大值
+            - avg_value: 平均值
+            - files_with_total_time: 有total_time字段的文件数
+            - files_without_total_time: 没有total_time字段的文件数
+    """
+    total_time_stats = {}
+    values = []
+
+    for file_path, config in config_stats.items():
+        total_time_val = config.get('total_time')
+        if total_time_val not in total_time_stats:
+            total_time_stats[total_time_val] = []
+        total_time_stats[total_time_val].append(file_path)
+
+        if total_time_val is not None:
+            values.append(total_time_val)
+
+    result = {
+        'value_distribution': total_time_stats,
+        'files_with_total_time': len(values),
+        'files_without_total_time': len(config_stats) - len(values),
+    }
+
+    if values:
+        result['min_value'] = min(values)
+        result['max_value'] = max(values)
+        result['avg_value'] = sum(values) / len(values)
+    else:
+        result['min_value'] = None
+        result['max_value'] = None
+        result['avg_value'] = None
+
+    return result
 
 
 def analyze_edges_in_json(json_file_path):
@@ -335,7 +382,8 @@ def find_all_json_files(root_dir):
 
 def generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
-                            all_config_keys, edge_stats=None, mode_stats=None, equation_stats=None):
+                            all_config_keys, edge_stats=None, mode_stats=None, equation_stats=None,
+                            total_time_stats=None):
     """
     生成Markdown格式的分析报告
 
@@ -424,8 +472,37 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
             f.write("*无kernel参数数据*\n")
         f.write("\n")
 
+        # Total_time参数统计
+        f.write("### 3.4 Total_time参数\n\n")
+        if total_time_stats:
+            # 基本统计信息
+            f.write("#### 基本统计\n\n")
+            f.write(f"- **有total_time字段的文件数**: {total_time_stats['files_with_total_time']}\n")
+            f.write(f"- **无total_time字段的文件数**: {total_time_stats['files_without_total_time']}\n")
+            if total_time_stats['min_value'] is not None:
+                f.write(f"- **最小值**: {total_time_stats['min_value']}\n")
+                f.write(f"- **最大值**: {total_time_stats['max_value']}\n")
+                f.write(f"- **平均值**: {total_time_stats['avg_value']:.2f}\n")
+            f.write("\n")
+
+            # 值分布表
+            f.write("#### 值分布\n\n")
+            value_distribution = total_time_stats['value_distribution']
+            if value_distribution:
+                f.write("| Total_time值 | 文件数量 | 文件列表 |\n")
+                f.write("|--------------|---------|----------|\n")
+                for time_val in sorted(value_distribution.keys(), key=lambda x: (x is None, x if x is not None else 0)):
+                    files = value_distribution[time_val]
+                    files_str = "<br>".join([f"`{f}`" for f in files])
+                    time_display = "null" if time_val is None else time_val
+                    f.write(f"| {time_display} | {len(files)} | {files_str} |\n")
+            f.write("\n")
+        else:
+            f.write("*无total_time参数数据*\n")
+        f.write("\n")
+
         # 所有配置项统计
-        f.write("### 3.4 所有配置项汇总\n\n")
+        f.write("### 3.5 所有配置项汇总\n\n")
         if all_config_keys:
             f.write("在所有JSON文件的config字段中，出现过的所有配置项：\n\n")
             for key in sorted(all_config_keys):
@@ -771,10 +848,16 @@ def main():
     print(f"  包含input字段的文件数: {len(files_with_input)}")
     print(f"  不包含input字段的文件数: {len(files_without_input)}")
     print(f"  包含config字段的文件数: {len(config_stats)}")
+    # 收集total_time统计
+    total_time_stats = get_total_time_stats(config_stats)
+
     print(f"\nConfig参数统计:")
     print(f"  Order参数分布: {dict((k, len(v)) for k, v in order_stats.items())}")
     print(f"  Need_reset参数分布: {dict((k, len(v)) for k, v in need_reset_stats.items())}")
     print(f"  Kernel参数分布: {dict((k, len(v)) for k, v in kernel_stats.items())}")
+    print(f"  Total_time参数分布: {dict((k, len(v)) for k, v in total_time_stats['value_distribution'].items())}")
+    if total_time_stats['min_value'] is not None:
+        print(f"  Total_time统计: 最小={total_time_stats['min_value']}, 最大={total_time_stats['max_value']}, 平均={total_time_stats['avg_value']:.2f}")
     print(f"  所有配置项: {sorted(all_config_keys)}")
 
     # 打印Edge统计结果
@@ -811,7 +894,8 @@ def main():
     # 生成Markdown报告
     generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
-                            all_config_keys, edge_stats, mode_stats, equation_stats)
+                            all_config_keys, edge_stats, mode_stats, equation_stats,
+                            total_time_stats)
 
 
 if __name__ == "__main__":

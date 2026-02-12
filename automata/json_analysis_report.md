@@ -862,3 +862,74 @@
   - 独有项: `1),x7[1]=2*x4[0]`, `x1[0]*x2[0],x2[1]=2*x3[0]`, `x3[0],x4[1]=x3[0]*x4[0]`, `x4[0]*x2[0],x3[1]=x2[0]*x7[0]`, `x4[0],x5[1]=2*x1[0]`, `x5[0],x6[1]=2*x5[0]`, `x7[0]`, `x7[0],x8[1]=4*x7[0]`
   - 缺少项: `1),x7[1]=5*x4[0]`, `x1[0]`, `x1[0]*x6[0],x2[1]=x4[0]`, `x3[0]*x2[0],x3[1]=x1[0]*x6[0]`, `x3[0],x4[1]=x2[0]*x6[0]`, `x4[0],x5[1]=3*x3[0]`, `x5[0],x6[1]=5*x5[0]`, `x7[0],x8[1]=5*x7[0]`
 
+## 8. 变量统计
+
+- **包含var字段的文件数**: 27
+- **包含input变量的文件数**: 4
+
+### 8.1 状态变量数量分布
+
+| 变量数量 | 文件数 | 文件列表 |
+|---------|--------|----------|
+| 1 | 8 | `ATVA\cell.json`<br>`FaMoS\simple_heating_system.json`<br>`FaMoS\three_state_ha.json`<br>`FaMoS\two_state_ha.json`<br>`non_linear\duffing.json`<br>`non_linear\duffing_simulate.json`<br>`non_linear\simple_non_linear.json`<br>`non_linear\simple_non_poly.json` |
+| 2 | 13 | `ATVA\ball.json`<br>`ATVA\oci.json`<br>`ATVA\tanks.json`<br>`FaMoS\buck_converter.json`<br>`FaMoS\variable_heating_system.json`<br>`linear\complex_underdamped_system.json`<br>`linear\dc_motor_position_PID.json`<br>`linear\linear_1.json`<br>`linear\loop.json`<br>`linear\two_tank.json`<br>`linear\underdamped_system.json`<br>`non_linear\lotkaVolterra.json`<br>`non_linear\oscillator.json` |
+| 3 | 2 | `FaMoS\complex_tank.json`<br>`FaMoS\multi_room_heating.json` |
+| 4 | 3 | `linear\one_legged_jumper.json`<br>`non_linear\lander.json`<br>`non_linear\spacecraft.json` |
+| 9 | 1 | `non_linear\sys_bio.json` |
+
+### 8.2 各文件变量详情
+
+| 文件 | 状态变量数 | 状态变量 | 输入变量数 | 输入变量 | 总变量数 |
+|------|-----------|---------|-----------|---------|---------|
+| `ATVA\ball.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `ATVA\cell.json` | 1 | `x1` | 0 | - | 1 |
+| `ATVA\oci.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `ATVA\tanks.json` | 2 | `x1`, `x2` | 1 | `u1` | 3 |
+| `FaMoS\buck_converter.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `FaMoS\complex_tank.json` | 3 | `x1`, `x2`, `x3` | 0 | - | 3 |
+| `FaMoS\multi_room_heating.json` | 3 | `x1`, `x2`, `x3` | 0 | - | 3 |
+| `FaMoS\simple_heating_system.json` | 1 | `x1` | 0 | - | 1 |
+| `FaMoS\three_state_ha.json` | 1 | `x1` | 0 | - | 1 |
+| `FaMoS\two_state_ha.json` | 1 | `x1` | 0 | - | 1 |
+| `FaMoS\variable_heating_system.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `linear\complex_underdamped_system.json` | 2 | `x1`, `x2` | 1 | `u1` | 3 |
+| `linear\dc_motor_position_PID.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `linear\linear_1.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `linear\loop.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `linear\one_legged_jumper.json` | 4 | `x1`, `x2`, `x3`, `x4` | 0 | - | 4 |
+| `linear\two_tank.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `linear\underdamped_system.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `non_linear\duffing.json` | 1 | `x` | 1 | `u` | 2 |
+| `non_linear\duffing_simulate.json` | 1 | `x` | 1 | `u` | 2 |
+| `non_linear\lander.json` | 4 | `x1`, `x2`, `x3`, `x4` | 0 | - | 4 |
+| `non_linear\lotkaVolterra.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `non_linear\oscillator.json` | 2 | `x1`, `x2` | 0 | - | 2 |
+| `non_linear\simple_non_linear.json` | 1 | `x` | 0 | - | 1 |
+| `non_linear\simple_non_poly.json` | 1 | `x` | 0 | - | 1 |
+| `non_linear\spacecraft.json` | 4 | `x1`, `x2`, `x3`, `x4` | 0 | - | 4 |
+| `non_linear\sys_bio.json` | 9 | `x1`, `x2`, `x3`, `x4`, `x5`, `x6`, `x7`, `x8`, `x9` | 0 | - | 9 |
+
+### 8.3 所有变量名汇总
+
+#### 状态变量
+
+| 变量名 | 出现次数(文件数) | 文件列表 |
+|--------|------------------|----------|
+| `x` | 4 | `non_linear\duffing.json`, `non_linear\duffing_simulate.json`, `non_linear\simple_non_linear.json`, `non_linear\simple_non_poly.json` |
+| `x1` | 23 | `ATVA\ball.json`, `ATVA\cell.json`, `ATVA\oci.json`, `ATVA\tanks.json`, `FaMoS\buck_converter.json`, `FaMoS\complex_tank.json`, `FaMoS\multi_room_heating.json`, `FaMoS\simple_heating_system.json`, `FaMoS\three_state_ha.json`, `FaMoS\two_state_ha.json`, `FaMoS\variable_heating_system.json`, `linear\complex_underdamped_system.json`, `linear\dc_motor_position_PID.json`, `linear\linear_1.json`, `linear\loop.json`, `linear\one_legged_jumper.json`, `linear\two_tank.json`, `linear\underdamped_system.json`, `non_linear\lander.json`, `non_linear\lotkaVolterra.json`, `non_linear\oscillator.json`, `non_linear\spacecraft.json`, `non_linear\sys_bio.json` |
+| `x2` | 19 | `ATVA\ball.json`, `ATVA\oci.json`, `ATVA\tanks.json`, `FaMoS\buck_converter.json`, `FaMoS\complex_tank.json`, `FaMoS\multi_room_heating.json`, `FaMoS\variable_heating_system.json`, `linear\complex_underdamped_system.json`, `linear\dc_motor_position_PID.json`, `linear\linear_1.json`, `linear\loop.json`, `linear\one_legged_jumper.json`, `linear\two_tank.json`, `linear\underdamped_system.json`, `non_linear\lander.json`, `non_linear\lotkaVolterra.json`, `non_linear\oscillator.json`, `non_linear\spacecraft.json`, `non_linear\sys_bio.json` |
+| `x3` | 6 | `FaMoS\complex_tank.json`, `FaMoS\multi_room_heating.json`, `linear\one_legged_jumper.json`, `non_linear\lander.json`, `non_linear\spacecraft.json`, `non_linear\sys_bio.json` |
+| `x4` | 4 | `linear\one_legged_jumper.json`, `non_linear\lander.json`, `non_linear\spacecraft.json`, `non_linear\sys_bio.json` |
+| `x5` | 1 | `non_linear\sys_bio.json` |
+| `x6` | 1 | `non_linear\sys_bio.json` |
+| `x7` | 1 | `non_linear\sys_bio.json` |
+| `x8` | 1 | `non_linear\sys_bio.json` |
+| `x9` | 1 | `non_linear\sys_bio.json` |
+
+#### 输入变量
+
+| 变量名 | 出现次数(文件数) | 文件列表 |
+|--------|------------------|----------|
+| `u` | 2 | `non_linear\duffing.json`, `non_linear\duffing_simulate.json` |
+| `u1` | 2 | `ATVA\tanks.json`, `linear\complex_underdamped_system.json` |
+

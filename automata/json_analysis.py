@@ -362,6 +362,71 @@ def extract_condition_pattern(condition):
     return patterns if patterns else ['simple']
 
 
+def analyze_variables_in_json(json_file_path):
+    """
+    分析单个JSON文件中的变量数量和变量名
+
+    通过解析 automaton.var 字段来确定状态变量，
+    通过解析 automaton.input 字段来确定输入变量。
+
+    Args:
+        json_file_path: JSON文件路径
+
+    Returns:
+        dict: 包含变量信息的字典，包括:
+            - var_count: 状态变量数量
+            - var_names: 状态变量名列表
+            - input_count: 输入变量数量
+            - input_names: 输入变量名列表
+            - total_count: 总变量数量（状态+输入）
+        如果没有automaton字段则返回None
+    """
+    try:
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        if 'automaton' not in data:
+            return None
+
+        automaton = data['automaton']
+        result = {
+            'var_count': 0,
+            'var_names': [],
+            'input_count': 0,
+            'input_names': [],
+            'total_count': 0
+        }
+
+        # 解析状态变量 (var 字段)
+        if 'var' in automaton:
+            var_str = automaton['var'].strip()
+            if ',' in var_str:
+                # 多个变量，逗号分隔: "x1, x2, x3"
+                var_names = [v.strip() for v in var_str.split(',') if v.strip()]
+            else:
+                # 单个变量: "x"
+                var_names = [var_str]
+            result['var_names'] = var_names
+            result['var_count'] = len(var_names)
+
+        # 解析输入变量 (input 字段)
+        if 'input' in automaton:
+            input_str = automaton['input'].strip()
+            if ',' in input_str:
+                input_names = [v.strip() for v in input_str.split(',') if v.strip()]
+            else:
+                input_names = [input_str]
+            result['input_names'] = input_names
+            result['input_count'] = len(input_names)
+
+        result['total_count'] = result['var_count'] + result['input_count']
+        return result
+
+    except Exception as e:
+        print(f"Error analyzing variables in {json_file_path}: {e}")
+        return None
+
+
 def find_all_json_files(root_dir):
     """
     递归查找所有JSON文件
@@ -383,7 +448,7 @@ def find_all_json_files(root_dir):
 def generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
                             all_config_keys, edge_stats=None, mode_stats=None, equation_stats=None,
-                            total_time_stats=None):
+                            total_time_stats=None, variable_stats=None):
     """
     生成Markdown格式的分析报告
 
@@ -400,6 +465,7 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
         edge_stats: edge条件统计信息
         mode_stats: mode数量统计信息
         equation_stats: mode方程分析统计信息
+        variable_stats: 变量数量统计信息
     """
     report_path = Path(__file__).parent / "json_analysis_report.md"
 
@@ -755,6 +821,79 @@ def generate_markdown_report(automata_dir, json_files, files_with_input, files_w
         else:
             f.write("*无方程数据*\n\n")
 
+        # 变量统计
+        f.write("## 8. 变量统计\n\n")
+        if variable_stats:
+            total_files = len(variable_stats)
+            files_with_inputs = sum(1 for info in variable_stats.values() if info['input_count'] > 0)
+
+            f.write(f"- **包含var字段的文件数**: {total_files}\n")
+            f.write(f"- **包含input变量的文件数**: {files_with_inputs}\n\n")
+
+            # 按状态变量数量分组统计
+            var_count_distribution = {}
+            for file_path, info in variable_stats.items():
+                count = info['var_count']
+                if count not in var_count_distribution:
+                    var_count_distribution[count] = []
+                var_count_distribution[count].append(file_path)
+
+            f.write("### 8.1 状态变量数量分布\n\n")
+            f.write("| 变量数量 | 文件数 | 文件列表 |\n")
+            f.write("|---------|--------|----------|\n")
+            for count in sorted(var_count_distribution.keys()):
+                files = var_count_distribution[count]
+                files_str = "<br>".join([f"`{f}`" for f in sorted(files)])
+                f.write(f"| {count} | {len(files)} | {files_str} |\n")
+            f.write("\n")
+
+            # 各文件变量详情
+            f.write("### 8.2 各文件变量详情\n\n")
+            f.write("| 文件 | 状态变量数 | 状态变量 | 输入变量数 | 输入变量 | 总变量数 |\n")
+            f.write("|------|-----------|---------|-----------|---------|---------|\n")
+            for file_path in sorted(variable_stats.keys()):
+                info = variable_stats[file_path]
+                var_names = ", ".join([f"`{v}`" for v in info['var_names']]) if info['var_names'] else "-"
+                input_names = ", ".join([f"`{v}`" for v in info['input_names']]) if info['input_names'] else "-"
+                f.write(f"| `{file_path}` | {info['var_count']} | {var_names} | {info['input_count']} | {input_names} | {info['total_count']} |\n")
+            f.write("\n")
+
+            # 所有出现过的变量名汇总
+            f.write("### 8.3 所有变量名汇总\n\n")
+            all_var_names = {}
+            all_input_names = {}
+            for file_path, info in variable_stats.items():
+                for v in info['var_names']:
+                    if v not in all_var_names:
+                        all_var_names[v] = []
+                    all_var_names[v].append(file_path)
+                for v in info['input_names']:
+                    if v not in all_input_names:
+                        all_input_names[v] = []
+                    all_input_names[v].append(file_path)
+
+            if all_var_names:
+                f.write("#### 状态变量\n\n")
+                f.write("| 变量名 | 出现次数(文件数) | 文件列表 |\n")
+                f.write("|--------|------------------|----------|\n")
+                for var in sorted(all_var_names.keys()):
+                    files = all_var_names[var]
+                    files_str = ", ".join([f"`{f}`" for f in sorted(files)])
+                    f.write(f"| `{var}` | {len(files)} | {files_str} |\n")
+                f.write("\n")
+
+            if all_input_names:
+                f.write("#### 输入变量\n\n")
+                f.write("| 变量名 | 出现次数(文件数) | 文件列表 |\n")
+                f.write("|--------|------------------|----------|\n")
+                for var in sorted(all_input_names.keys()):
+                    files = all_input_names[var]
+                    files_str = ", ".join([f"`{f}`" for f in sorted(files)])
+                    f.write(f"| `{var}` | {len(files)} | {files_str} |\n")
+                f.write("\n")
+        else:
+            f.write("*无变量数据*\n\n")
+
     print(f"\n📄 分析报告已保存到: {report_path}")
     return report_path
 
@@ -784,6 +923,7 @@ def main():
     edge_stats = {}
     mode_stats = {}  # 统计每个文件的mode数量
     equation_stats = {}  # 统计每个文件的mode方程
+    variable_stats = {}  # 统计每个文件的变量数量
 
     for json_file in json_files:
         # 统计input字段
@@ -841,6 +981,11 @@ def main():
         if equation_info:
             equation_stats[rel_path] = equation_info
 
+        # 分析变量数量
+        var_info = analyze_variables_in_json(json_file)
+        if var_info:
+            variable_stats[rel_path] = var_info
+
     # 打印统计结果
     print("=" * 80)
     print(f"\n统计结果:")
@@ -891,11 +1036,18 @@ def main():
     print(f"  方程项一致的文件数: {consistent_count}")
     print(f"  方程项不一致的文件数: {len(equation_stats) - consistent_count}")
 
+    # 打印变量统计结果
+    print(f"\n变量统计:")
+    print(f"  包含var字段的文件数: {len(variable_stats)}")
+    for file_path, info in sorted(variable_stats.items()):
+        input_str = f", 输入: {', '.join(info['input_names'])}" if info['input_names'] else ""
+        print(f"    {file_path}: {info['var_count']}个状态变量 ({', '.join(info['var_names'])}){input_str}")
+
     # 生成Markdown报告
     generate_markdown_report(automata_dir, json_files, files_with_input, files_without_input,
                             config_stats, order_stats, need_reset_stats, kernel_stats,
                             all_config_keys, edge_stats, mode_stats, equation_stats,
-                            total_time_stats)
+                            total_time_stats, variable_stats)
 
 
 if __name__ == "__main__":

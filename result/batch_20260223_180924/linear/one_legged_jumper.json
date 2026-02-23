@@ -1,0 +1,27 @@
+{
+  "name": "automata/linear/one_legged_jumper.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 1.4175416174764986e-13,
+  "mean_diff": 2.723277395012708e-14,
+  "time": [
+    [
+      "change_points",
+      0.8675792217254639
+    ],
+    [
+      "clustering",
+      0.29752516746520996
+    ],
+    [
+      "guard_learning",
+      2.306457996368408
+    ],
+    [
+      "total",
+      3.517437696456909
+    ]
+  ],
+  "status": "ok"
+}

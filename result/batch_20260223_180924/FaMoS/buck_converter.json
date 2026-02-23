@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/buck_converter.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 4.5428157996089093e-13,
+  "mean_diff": 7.7222452664436e-14,
+  "time": [
+    [
+      "change_points",
+      2.009443759918213
+    ],
+    [
+      "clustering",
+      1.4324707984924316
+    ],
+    [
+      "guard_learning",
+      0.03445291519165039
+    ],
+    [
+      "total",
+      3.583071231842041
+    ]
+  ],
+  "status": "ok"
+}

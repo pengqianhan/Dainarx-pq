@@ -1,0 +1,27 @@
+{
+  "name": "automata/ATVA/cell.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.01,
+  "max_diff": 0.017565736410723422,
+  "mean_diff": 0.0002276679057224698,
+  "time": [
+    [
+      "change_points",
+      4.9286134243011475
+    ],
+    [
+      "clustering",
+      3.916815996170044
+    ],
+    [
+      "guard_learning",
+      0.03029012680053711
+    ],
+    [
+      "total",
+      9.132766723632812
+    ]
+  ],
+  "status": "ok"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/variable_heating_system.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.03,
+  "max_diff": 0.020015604755170238,
+  "mean_diff": 0.000456106269673857,
+  "time": [
+    [
+      "change_points",
+      1.8495593070983887
+    ],
+    [
+      "clustering",
+      1.025850772857666
+    ],
+    [
+      "guard_learning",
+      0.05894184112548828
+    ],
+    [
+      "total",
+      3.0306360721588135
+    ]
+  ],
+  "status": "ok"
+}

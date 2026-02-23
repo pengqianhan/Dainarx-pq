@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/lander.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.01,
+  "max_diff": 0.0024295418650589697,
+  "mean_diff": 4.7224483525937206e-05,
+  "time": [
+    [
+      "change_points",
+      2.465273141860962
+    ],
+    [
+      "clustering",
+      0.935859203338623
+    ],
+    [
+      "guard_learning",
+      0.0031058788299560547
+    ],
+    [
+      "total",
+      3.549140453338623
+    ]
+  ],
+  "status": "ok"
+}

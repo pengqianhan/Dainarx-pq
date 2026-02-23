@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/sys_bio.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.012,
+  "max_diff": 0.09598828000399706,
+  "mean_diff": 0.008125399965794896,
+  "time": [
+    [
+      "change_points",
+      21.099787950515747
+    ],
+    [
+      "clustering",
+      13.135090351104736
+    ],
+    [
+      "guard_learning",
+      0.23662734031677246
+    ],
+    [
+      "total",
+      36.50184202194214
+    ]
+  ],
+  "status": "ok"
+}

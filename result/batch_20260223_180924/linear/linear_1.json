@@ -1,0 +1,27 @@
+{
+  "name": "automata/linear/linear_1.json",
+  "train_tc": 0.01,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 3.142895556965005e-13,
+  "mean_diff": 5.85397567643572e-14,
+  "time": [
+    [
+      "change_points",
+      1.2104897499084473
+    ],
+    [
+      "clustering",
+      1.343968391418457
+    ],
+    [
+      "guard_learning",
+      0.6810321807861328
+    ],
+    [
+      "total",
+      3.3265366554260254
+    ]
+  ],
+  "status": "ok"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/oscillator.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 6.105921235404822e-07,
+  "mean_diff": 1.3796423435875687e-07,
+  "time": [
+    [
+      "change_points",
+      1.1804735660552979
+    ],
+    [
+      "clustering",
+      0.4681739807128906
+    ],
+    [
+      "guard_learning",
+      0.004858970642089844
+    ],
+    [
+      "total",
+      1.7262301445007324
+    ]
+  ],
+  "status": "ok"
+}

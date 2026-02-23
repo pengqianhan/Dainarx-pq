@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/three_state_ha.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 3.44811553347123e-08,
+  "mean_diff": 6.554969530852954e-10,
+  "time": [
+    [
+      "change_points",
+      0.9669837951660156
+    ],
+    [
+      "clustering",
+      0.48946309089660645
+    ],
+    [
+      "guard_learning",
+      0.008001089096069336
+    ],
+    [
+      "total",
+      1.5205967426300049
+    ]
+  ],
+  "status": "ok"
+}

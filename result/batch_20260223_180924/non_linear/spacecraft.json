@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/spacecraft.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 7.519201512144695e-11,
+  "mean_diff": 1.055955338265204e-11,
+  "time": [
+    [
+      "change_points",
+      2.2104721069335938
+    ],
+    [
+      "clustering",
+      0.7593557834625244
+    ],
+    [
+      "guard_learning",
+      0.021508216857910156
+    ],
+    [
+      "total",
+      3.12154483795166
+    ]
+  ],
+  "status": "ok"
+}

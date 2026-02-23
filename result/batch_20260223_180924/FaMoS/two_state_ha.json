@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/two_state_ha.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 4.729784213450976e-10,
+  "mean_diff": 9.714246725719056e-11,
+  "time": [
+    [
+      "change_points",
+      0.9632480144500732
+    ],
+    [
+      "clustering",
+      0.35207200050354004
+    ],
+    [
+      "guard_learning",
+      0.006863594055175781
+    ],
+    [
+      "total",
+      1.3767387866973877
+    ]
+  ],
+  "status": "ok"
+}

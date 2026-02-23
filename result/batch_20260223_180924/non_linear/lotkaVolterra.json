@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/lotkaVolterra.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.02,
+  "max_diff": 0.004650569013805353,
+  "mean_diff": 0.0005636821593383775,
+  "time": [
+    [
+      "change_points",
+      0.8537130355834961
+    ],
+    [
+      "clustering",
+      0.39647483825683594
+    ],
+    [
+      "guard_learning",
+      0.03293871879577637
+    ],
+    [
+      "total",
+      1.3473317623138428
+    ]
+  ],
+  "status": "ok"
+}

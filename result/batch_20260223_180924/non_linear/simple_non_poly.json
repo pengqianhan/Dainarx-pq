@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/simple_non_poly.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 4.062288582140684e-06,
+  "mean_diff": 1.4099458262646375e-06,
+  "time": [
+    [
+      "change_points",
+      3.372058868408203
+    ],
+    [
+      "clustering",
+      1.1516733169555664
+    ],
+    [
+      "guard_learning",
+      0.026548147201538086
+    ],
+    [
+      "total",
+      4.788455963134766
+    ]
+  ],
+  "status": "ok"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/simple_heating_system.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.02,
+  "max_diff": 0.01016516716000248,
+  "mean_diff": 0.0006897129524072085,
+  "time": [
+    [
+      "change_points",
+      1.0641846656799316
+    ],
+    [
+      "clustering",
+      0.4013679027557373
+    ],
+    [
+      "guard_learning",
+      0.008896112442016602
+    ],
+    [
+      "total",
+      1.5271987915039062
+    ]
+  ],
+  "status": "ok"
+}

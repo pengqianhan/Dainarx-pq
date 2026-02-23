@@ -1,0 +1,27 @@
+{
+  "name": "automata/ATVA/oci.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 1.4354080090861647e-14,
+  "mean_diff": 4.667413497208407e-15,
+  "time": [
+    [
+      "change_points",
+      1.7905182838439941
+    ],
+    [
+      "clustering",
+      0.5718851089477539
+    ],
+    [
+      "guard_learning",
+      0.04658913612365723
+    ],
+    [
+      "total",
+      2.4975693225860596
+    ]
+  ],
+  "status": "ok"
+}

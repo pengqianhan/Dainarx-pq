@@ -125,7 +125,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
             mode_list.append(mode_data_temp)
             input_list.append(npz_file['input'])
 
-    test_num = 6
+    test_num = 12
 
     print("Be running!")
     # print("len(gt_list): ", len(gt_list))#15

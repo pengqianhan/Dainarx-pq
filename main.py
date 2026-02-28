@@ -74,7 +74,7 @@ def get_config(json_path, evaluation: Evaluation):
     return config, get_hash_code(json_file, config)
 
 
-def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
+def main(json_path: str, data_path='data', need_creat=None, need_plot=True, noise_level: float = 0.0):
     evaluation = Evaluation(json_path)
     config, hash_code = get_config(json_path, evaluation)
     HybridAutomata.LoopWarning = not config['self_loop']
@@ -86,7 +86,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True):
         need_creat = check_data_update(hash_code, data_path)
     if need_creat:
         print("Data being generated!")
-        creat_data(json_path, data_path, config['dt'], config['total_time'])
+        creat_data(json_path, data_path, config['dt'], config['total_time'], noise_level=noise_level)
         save_hash_code(hash_code, data_path)
 
     mode_list = []
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     if not os.path.exists(result_path):
         os.makedirs(result_path)
     
-    eval_log = main("./automata/non_linear/duffing.json")
+    eval_log = main("./automata/non_linear/duffing.json", noise_level=0.05)
 
     with open(os.path.join(result_path, "eval_log.json"), "w") as f:
         json.dump(eval_log, f)

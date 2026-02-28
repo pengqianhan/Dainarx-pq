@@ -7,12 +7,13 @@ from src.HybridAutomata import HybridAutomata
 import json
 
 
-def creat_data(json_path: str, data_path: str, dT: float, times: float):
+def creat_data(json_path: str, data_path: str, dT: float, times: float, noise_level: float = 0.05):
     r"""
     :param json_path: File path of automata.
     :param data_path: Data storage path.
     :param dT: Discrete time.
     :param times: Total sampling time.
+    :param noise_level: Measurement noise level (e.g., 0.05 means 5% of each dimension's std).
     """
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -55,6 +56,15 @@ def creat_data(json_path: str, data_path: str, dT: float, times: float):
             state_data = np.transpose(np.array(state_data))
             input_data = np.transpose(np.array(input_data))
             mode_data = np.array(mode_data)
+            # Add measurement noise scaled by each dimension's standard deviation
+            if noise_level > 0:
+                for dim in range(state_data.shape[0]):
+                    dim_std = np.std(state_data[dim])
+                    if dim_std > 0:
+                        noise = np.random.normal(0, noise_level * dim_std, size=state_data.shape[1])
+                    else:
+                        noise = np.random.normal(0, noise_level, size=state_data.shape[1])
+                    state_data[dim] += noise
             np.savez(os.path.join(data_path, "test_data" + str(state_id)),
                      state=state_data, mode=mode_data, input=input_data, change_points=change_points)
             state_id += 1

@@ -114,7 +114,7 @@ def main(json_path: str, data_path='data', need_creat=None, need_plot=True, nois
             mode_list.append(mode_data_temp)
             input_list.append(npz_file['input'])
 
-    test_num = 6
+    test_num = 12 # number of test data, the same as HA-scientist paper
 
     print("Be running!")
     evaluation.submit(gt_chp=gt_list[test_num:])

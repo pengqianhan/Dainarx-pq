@@ -1,0 +1,27 @@
+{
+  "name": "automata/linear/underdamped_system.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 1.7265813257266283e-12,
+  "mean_diff": 2.3586520323687753e-13,
+  "time": [
+    [
+      "change_points",
+      2.9605438709259033
+    ],
+    [
+      "clustering",
+      1.181135892868042
+    ],
+    [
+      "guard_learning",
+      0.05491447448730469
+    ],
+    [
+      "total",
+      4.420841932296753
+    ]
+  ],
+  "status": "ok"
+}

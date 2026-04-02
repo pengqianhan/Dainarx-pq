@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/Aircraft.json",
+  "train_tc": 0.0,
+  "clustering_error": 2,
+  "tc": 0.0,
+  "max_diff": 3.3158945079743334,
+  "mean_diff": 0.23767422794762139,
+  "time": [
+    [
+      "change_points",
+      1.091280221939087
+    ],
+    [
+      "clustering",
+      0.4958798885345459
+    ],
+    [
+      "guard_learning",
+      8.7738037109375e-05
+    ],
+    [
+      "total",
+      1.6628282070159912
+    ]
+  ],
+  "status": "ok"
+}

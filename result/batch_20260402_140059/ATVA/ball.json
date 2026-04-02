@@ -1,0 +1,27 @@
+{
+  "name": "automata/ATVA/ball.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 7.4643533743709e-14,
+  "mean_diff": 6.600060033925575e-15,
+  "time": [
+    [
+      "change_points",
+      1.1897618770599365
+    ],
+    [
+      "clustering",
+      0.5193357467651367
+    ],
+    [
+      "guard_learning",
+      0.41388916969299316
+    ],
+    [
+      "total",
+      2.182286262512207
+    ]
+  ],
+  "status": "ok"
+}

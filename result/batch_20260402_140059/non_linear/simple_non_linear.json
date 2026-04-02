@@ -1,0 +1,27 @@
+{
+  "name": "automata/non_linear/simple_non_linear.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.006,
+  "max_diff": 0.036655111028537544,
+  "mean_diff": 0.001989047352120568,
+  "time": [
+    [
+      "change_points",
+      6.5826075077056885
+    ],
+    [
+      "clustering",
+      2.6751980781555176
+    ],
+    [
+      "guard_learning",
+      0.04114246368408203
+    ],
+    [
+      "total",
+      9.722176313400269
+    ]
+  ],
+  "status": "ok"
+}

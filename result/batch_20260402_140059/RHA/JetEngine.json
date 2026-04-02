@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/JetEngine.json",
+  "train_tc": 2.71,
+  "clustering_error": 10,
+  "tc": 0.0,
+  "max_diff": 17.695178690468506,
+  "mean_diff": 4.65736268614065,
+  "time": [
+    [
+      "change_points",
+      0.7746291160583496
+    ],
+    [
+      "clustering",
+      0.10026264190673828
+    ],
+    [
+      "guard_learning",
+      6.866455078125e-05
+    ],
+    [
+      "total",
+      0.8770468235015869
+    ]
+  ],
+  "status": "ok"
+}

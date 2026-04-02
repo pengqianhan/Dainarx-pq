@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/PiecewisePoly1.json",
+  "train_tc": 0.0,
+  "clustering_error": 2,
+  "tc": 0.0,
+  "max_diff": 0.0397673507602367,
+  "mean_diff": 0.006025196194199129,
+  "time": [
+    [
+      "change_points",
+      2.6830382347106934
+    ],
+    [
+      "clustering",
+      0.6159281730651855
+    ],
+    [
+      "guard_learning",
+      0.00011539459228515625
+    ],
+    [
+      "total",
+      3.4639902114868164
+    ]
+  ],
+  "status": "ok"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/VanDerPol.json",
+  "train_tc": 1.6600000000000001,
+  "clustering_error": 8,
+  "tc": 0.0,
+  "max_diff": 1.8765500234215744,
+  "mean_diff": 0.5782180571771188,
+  "time": [
+    [
+      "change_points",
+      0.7749264240264893
+    ],
+    [
+      "clustering",
+      0.05105185508728027
+    ],
+    [
+      "guard_learning",
+      5.626678466796875e-05
+    ],
+    [
+      "total",
+      0.8273162841796875
+    ]
+  ],
+  "status": "ok"
+}

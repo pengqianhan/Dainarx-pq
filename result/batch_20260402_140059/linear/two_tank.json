@@ -1,0 +1,27 @@
+{
+  "name": "automata/linear/two_tank.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 3.5740681741808747e-13,
+  "mean_diff": 6.170342468999265e-14,
+  "time": [
+    [
+      "change_points",
+      2.044456958770752
+    ],
+    [
+      "clustering",
+      0.6194858551025391
+    ],
+    [
+      "guard_learning",
+      5.168042898178101
+    ],
+    [
+      "total",
+      7.982103586196899
+    ]
+  ],
+  "status": "ok"
+}

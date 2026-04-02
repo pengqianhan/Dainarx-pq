@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/FillingTanks.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.115,
+  "max_diff": 0.2787563401600118,
+  "mean_diff": 0.013020396293189553,
+  "time": [
+    [
+      "change_points",
+      3.4180550575256348
+    ],
+    [
+      "clustering",
+      1.8485164642333984
+    ],
+    [
+      "guard_learning",
+      0.3687305450439453
+    ],
+    [
+      "total",
+      5.926735162734985
+    ]
+  ],
+  "status": "ok"
+}

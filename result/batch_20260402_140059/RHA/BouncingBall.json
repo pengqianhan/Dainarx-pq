@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/BouncingBall.json",
+  "train_tc": 0.01,
+  "clustering_error": 0,
+  "tc": 0.0,
+  "max_diff": 1.4369009250693772,
+  "mean_diff": 0.0007904372811869397,
+  "time": [
+    [
+      "change_points",
+      0.22923874855041504
+    ],
+    [
+      "clustering",
+      0.07169842720031738
+    ],
+    [
+      "guard_learning",
+      0.046066999435424805
+    ],
+    [
+      "total",
+      0.36031579971313477
+    ]
+  ],
+  "status": "ok"
+}

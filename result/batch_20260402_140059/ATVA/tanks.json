@@ -1,0 +1,27 @@
+{
+  "name": "automata/ATVA/tanks.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.01,
+  "max_diff": 0.017737035267893102,
+  "mean_diff": 0.0006951071229907139,
+  "time": [
+    [
+      "change_points",
+      2.4092323780059814
+    ],
+    [
+      "clustering",
+      2.6145100593566895
+    ],
+    [
+      "guard_learning",
+      0.24343228340148926
+    ],
+    [
+      "total",
+      5.460848569869995
+    ]
+  ],
+  "status": "ok"
+}

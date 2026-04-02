@@ -1,0 +1,27 @@
+{
+  "name": "automata/FaMoS/complex_tank.json",
+  "train_tc": 0.0,
+  "clustering_error": 0,
+  "tc": 0.095,
+  "max_diff": 0.27136154240376176,
+  "mean_diff": 0.003910864462262049,
+  "time": [
+    [
+      "change_points",
+      4.045406818389893
+    ],
+    [
+      "clustering",
+      6.039381504058838
+    ],
+    [
+      "guard_learning",
+      0.6051669120788574
+    ],
+    [
+      "total",
+      11.05040168762207
+    ]
+  ],
+  "status": "ok"
+}

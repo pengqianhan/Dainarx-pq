@@ -1,0 +1,27 @@
+{
+  "name": "automata/RHA/TwoRoomHeater.json",
+  "train_tc": 0.11,
+  "clustering_error": 3,
+  "tc": 0.98,
+  "max_diff": 504.4591080813172,
+  "mean_diff": 7.3128575569986,
+  "time": [
+    [
+      "change_points",
+      0.49674391746520996
+    ],
+    [
+      "clustering",
+      0.7619531154632568
+    ],
+    [
+      "guard_learning",
+      0.22813057899475098
+    ],
+    [
+      "total",
+      1.5111441612243652
+    ]
+  ],
+  "status": "ok"
+}

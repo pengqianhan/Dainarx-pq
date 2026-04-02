@@ -1,0 +1,27 @@
+{
+  "name": "automata/linear/dc_motor_position_PID.json",
+  "train_tc": 9.73,
+  "clustering_error": 1,
+  "tc": 9.71,
+  "max_diff": NaN,
+  "mean_diff": NaN,
+  "time": [
+    [
+      "change_points",
+      7.962189435958862
+    ],
+    [
+      "clustering",
+      0.8078052997589111
+    ],
+    [
+      "guard_learning",
+      5.054473876953125e-05
+    ],
+    [
+      "total",
+      8.771989583969116
+    ]
+  ],
+  "status": "ok"
+}

@@ -2,16 +2,23 @@
 # run_all.sh - Process all JSON files under automata/ and summarize results into a markdown file.
 #
 # Usage:
-#   bash run_all.sh              # run all benchmarks
-#   bash run_all.sh linear       # run only the "linear" category
-#   bash run_all.sh non_linear   # run only the "non_linear" category
+#   bash run_all.sh                          # run all benchmarks
+#   bash run_all.sh linear                   # run only the "linear" category
+#   bash run_all.sh non_linear               # run only the "non_linear" category
+#   bash run_all.sh "" 0.1                   # run all benchmarks with noise_level=0.1
+#   bash run_all.sh linear 0.05             # run "linear" with noise_level=0.05
 
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-RESULT_DIR="$PROJECT_DIR/result/batch_$(date +%Y%m%d_%H%M%S)"
+NOISE_SUFFIX=""
+if [[ -n "${2:-}" ]]; then
+    NOISE_SUFFIX="_noise${2}"
+fi
+RESULT_DIR="$PROJECT_DIR/result/batch_$(date +%Y%m%d_%H%M%S)${NOISE_SUFFIX}"
 SUMMARY_FILE="$RESULT_DIR/summary.md"
 CATEGORY_FILTER="${1:-}"   # optional: only run a specific category
+NOISE_LEVEL="${2:-}"       # optional: noise level (e.g. 0.1)
 
 mkdir -p "$RESULT_DIR"
 
@@ -22,6 +29,9 @@ TOTAL=${#JSON_FILES[@]}
 echo "Found $TOTAL benchmark JSON files."
 if [[ -n "$CATEGORY_FILTER" ]]; then
     echo "Filtering by category: $CATEGORY_FILTER"
+fi
+if [[ -n "$NOISE_LEVEL" ]]; then
+    echo "Noise level: $NOISE_LEVEL"
 fi
 
 SUCCESS=0
@@ -48,12 +58,13 @@ for idx in "${!JSON_FILES[@]}"; do
     result_json="$bench_dir/${benchmark}.json"
 
     # Run the benchmark via a small Python wrapper
-    if python3 - "$PROJECT_DIR" "$rel_path" "$result_json" << 'PYEOF'
+    if python3 - "$PROJECT_DIR" "$rel_path" "$result_json" "$NOISE_LEVEL" << 'PYEOF'
 import sys, json, os
 
 project_dir = sys.argv[1]
 rel_path    = sys.argv[2]
 out_path    = sys.argv[3]
+noise_arg   = sys.argv[4] if len(sys.argv) > 4 else ""
 
 os.chdir(project_dir)
 sys.path.insert(0, project_dir)
@@ -65,7 +76,10 @@ matplotlib.use("Agg")
 from main import main
 
 try:
-    eval_log = main(rel_path, need_plot=False)
+    kwargs = {"need_plot": False}
+    if noise_arg:
+        kwargs["noise_level"] = float(noise_arg)
+    eval_log = main(rel_path, **kwargs)
     eval_log["status"] = "ok"
 except Exception as e:
     eval_log = {"status": "error", "error": str(e)}

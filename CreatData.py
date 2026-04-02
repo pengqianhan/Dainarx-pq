@@ -7,7 +7,7 @@ from src.HybridAutomata import HybridAutomata
 import json
 
 
-def creat_data(json_path: str, data_path: str, dT: float, times: float, noise_level: float = 0.05):
+def creat_data(json_path: str, data_path: str, dT: float, times: float, noise_level: float = 0):
     r"""
     :param json_path: File path of automata.
     :param data_path: Data storage path.

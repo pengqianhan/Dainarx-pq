@@ -1,0 +1,71 @@
+\paragraph{Evaluation Metrics.}
+We evaluate the learned hybrid automata from two perspectives: transition
+timing and continuous-state reconstruction accuracy. Let $K$ denote the number
+of evaluation traces. For the $k$-th trace, let
+$\hat{m}^{(k)} = (\hat{m}^{(k)}_0,\ldots,\hat{m}^{(k)}_{T_k-1})$ and
+$m^{(k)} = (m^{(k)}_0,\ldots,m^{(k)}_{T_k-1})$ be the inferred and ground-truth
+mode sequences, respectively. The corresponding inferred and ground-truth state
+trajectories are denoted by $\hat{x}^{(k)}_{i,t}$ and $x^{(k)}_{i,t}$, where
+$i$ indexes the state variable and $t$ indexes the time step.
+
+To assess the quality of mode switching, we first extract the change-point set
+from a mode sequence $m$ as
+\[
+\mathrm{cp}(m)
+=
+\{0\}
+\cup
+\{t \mid 1 \le t \le T_k - 1,\; m_t \neq m_{t-1}\}
+\cup
+\{T_k\}.
+\]
+For two change-point sets $A$ and $B$, define the directed deviation
+\[
+d(A,B)=\max_{a\in A}\min_{b\in B}|a-b|.
+\]
+Then the transition-time error is defined as
+\[
+\mathrm{tc}
+=
+\max_{1\le k\le K}
+\left(
+\max
+\left\{
+d(\mathrm{cp}(\hat{m}^{(k)}),\mathrm{cp}(m^{(k)})),
+d(\mathrm{cp}(m^{(k)}),\mathrm{cp}(\hat{m}^{(k)}))
+\right\}
+\cdot \Delta t
+\right),
+\]
+where $\Delta t$ is the sampling interval. This metric measures the worst-case
+symmetric mismatch between inferred and ground-truth switching times.
+
+For the continuous dynamics, we use normalized absolute errors. For each
+variable $i$ in trace $k$, let
+\[
+\varepsilon^{(k)}_{i,t}
+=
+\frac{\left|\hat{x}^{(k)}_{i,t}-x^{(k)}_{i,t}\right|}
+{\max_{0\le \tau \le T_k-1}\left|x^{(k)}_{i,\tau}\right|}.
+\]
+Based on this normalized pointwise error, we report
+\[
+\mathrm{max\_diff}
+=
+\max_{1\le k\le K}\max_{i,t}\varepsilon^{(k)}_{i,t},
+\]
+which captures the worst-case normalized deviation, and
+\[
+\mathrm{mean\_diff}
+=
+\frac{1}{K}
+\sum_{k=1}^{K}
+\left(
+\frac{1}{n_kT_k}
+\sum_{i=1}^{n_k}\sum_{t=0}^{T_k-1}\varepsilon^{(k)}_{i,t}
+\right),
+\]
+where $n_k$ is the number of state variables in the $k$-th trace. Hence,
+$\mathrm{mean\_diff}$ is the average normalized absolute deviation across all
+variables and time steps, averaged again over traces, while
+$\mathrm{max\_diff}$ captures the largest normalized pointwise discrepancy.

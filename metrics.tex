@@ -1,0 +1,58 @@
+\paragraph{Evaluation metrics.}
+Let $K$ denote the number of evaluated traces. For the $k$-th trace, let
+$\hat{m}^{(k)} = (\hat{m}^{(k)}_0,\ldots,\hat{m}^{(k)}_{T_k-1})$ and
+$m^{(k)} = (m^{(k)}_0,\ldots,m^{(k)}_{T_k-1})$ be the inferred and ground-truth
+mode sequences, respectively, and let $\hat{x}^{(k)}_{i,t}$ and $x^{(k)}_{i,t}$
+denote the inferred and ground-truth values of variable $i$ at time step $t$.
+Following the implementation, the change-point set extracted from a mode
+sequence $m$ is
+\[
+\mathrm{cp}(m) = \{0\} \cup \{t \mid 1 \le t \le T_k - 1,\; m_t \ne m_{t-1}\}
+\cup \{T_k\}.
+\]
+For two change-point sets $A$ and $B$, define the directed nearest-neighbor
+distance
+\[
+d(A, B) = \max_{a \in A} \min_{b \in B} |a - b|.
+\]
+The transition-time error is then computed as
+\[
+\mathrm{tc} =
+\max_{1 \le k \le K}
+\left(
+\max
+\left\{
+d(\mathrm{cp}(\hat{m}^{(k)}), \mathrm{cp}(m^{(k)})),
+\; d(\mathrm{cp}(m^{(k)}), \mathrm{cp}(\hat{m}^{(k)}))
+\right\}
+\cdot \Delta t
+\right),
+\]
+where $\Delta t$ is the sampling interval. This is the symmetric
+nearest-change-point deviation measured in time units.
+
+For the continuous trajectories, the code first normalizes the absolute error of
+each variable by the maximum absolute value of the corresponding ground-truth
+signal within the same trace. Specifically, for variable $i$ in trace $k$, let
+\[
+s^{(k)}_i = \max_{0 \le t \le T_k - 1} |x^{(k)}_{i,t}|,
+\qquad
+e^{(k)}_{i,t} = \frac{|\hat{x}^{(k)}_{i,t} - x^{(k)}_{i,t}|}{s^{(k)}_i}.
+\]
+The maximum normalized deviation is reported as
+\[
+\mathrm{max\_diff} = \max_{1 \le k \le K} \max_{i,t} e^{(k)}_{i,t},
+\]
+and the mean normalized deviation is reported as
+\[
+\mathrm{mean\_diff}
+= \frac{1}{K} \sum_{k=1}^{K}
+\left(
+\frac{1}{n_k T_k}
+\sum_{i=1}^{n_k} \sum_{t=0}^{T_k - 1} e^{(k)}_{i,t}
+\right),
+\]
+where $n_k$ is the number of state variables in trace $k$. Therefore,
+$\mathrm{max\_diff}$ and $\mathrm{mean\_diff}$ are dimensionless normalized
+errors, and $\mathrm{mean\_diff} \times 100$ can be reported as a percentage if
+desired.

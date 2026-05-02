@@ -1,0 +1,162 @@
+[
+  {
+    "name": "data_real\\ControlledCells_g",
+    "train_tc": 0.0,
+    "clustering_error": 0,
+    "tc": 0.0,
+    "max_diff": 0.5327602659426247,
+    "mean_diff": 0.18356083558278635,
+    "time": [
+      [
+        "change_points",
+        0.002133607864379883
+      ],
+      [
+        "clustering",
+        0.0015168190002441406
+      ],
+      [
+        "guard_learning",
+        0.0
+      ],
+      [
+        "total",
+        0.004655361175537109
+      ]
+    ],
+    "dataset": "ControlledCells_g",
+    "train_files": [
+      "data_real\\ControlledCells_g\\ground_truth_0.npz",
+      "data_real\\ControlledCells_g\\ground_truth_1.npz",
+      "data_real\\ControlledCells_g\\ground_truth_2.npz"
+    ],
+    "test_files": [
+      "data_real\\ControlledCells_g\\ground_truth_3.npz",
+      "data_real\\ControlledCells_g\\ground_truth_4.npz",
+      "data_real\\ControlledCells_g\\ground_truth_5.npz",
+      "data_real\\ControlledCells_g\\ground_truth_6.npz",
+      "data_real\\ControlledCells_g\\ground_truth_7.npz"
+    ],
+    "status": "ok"
+  },
+  {
+    "name": "data_real\\F1tenthCar_g",
+    "train_tc": 0.0,
+    "clustering_error": 0,
+    "tc": 0.0,
+    "max_diff": 22.491551782519192,
+    "mean_diff": 0.6041535705785963,
+    "time": [
+      [
+        "change_points",
+        0.00527191162109375
+      ],
+      [
+        "clustering",
+        0.007833003997802734
+      ],
+      [
+        "guard_learning",
+        0.0
+      ],
+      [
+        "total",
+        0.01820063591003418
+      ]
+    ],
+    "dataset": "F1tenthCar_g",
+    "train_files": [
+      "data_real\\F1tenthCar_g\\ground_truth_0.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_1.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_2.npz"
+    ],
+    "test_files": [
+      "data_real\\F1tenthCar_g\\ground_truth_3.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_4.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_5.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_6.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_7.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_8.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_9.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_10.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_11.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_12.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_13.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_14.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_15.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_16.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_17.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_18.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_19.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_20.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_21.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_22.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_23.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_24.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_25.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_26.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_27.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_28.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_29.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_30.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_31.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_32.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_33.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_34.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_35.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_36.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_37.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_38.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_39.npz",
+      "data_real\\F1tenthCar_g\\ground_truth_40.npz"
+    ],
+    "status": "ok"
+  },
+  {
+    "name": "data_real\\Handwriting_g",
+    "train_tc": 0.0,
+    "clustering_error": 0,
+    "tc": 0.0,
+    "max_diff": 0.5798829093424528,
+    "mean_diff": 0.18089112157557677,
+    "time": [
+      [
+        "change_points",
+        0.003014087677001953
+      ],
+      [
+        "clustering",
+        0.004676342010498047
+      ],
+      [
+        "guard_learning",
+        0.0
+      ],
+      [
+        "total",
+        0.04038429260253906
+      ]
+    ],
+    "dataset": "Handwriting_g",
+    "train_files": [
+      "data_real\\Handwriting_g\\ground_truth_0.npz",
+      "data_real\\Handwriting_g\\ground_truth_1.npz",
+      "data_real\\Handwriting_g\\ground_truth_2.npz"
+    ],
+    "test_files": [
+      "data_real\\Handwriting_g\\ground_truth_3.npz",
+      "data_real\\Handwriting_g\\ground_truth_4.npz",
+      "data_real\\Handwriting_g\\ground_truth_5.npz",
+      "data_real\\Handwriting_g\\ground_truth_6.npz",
+      "data_real\\Handwriting_g\\ground_truth_7.npz",
+      "data_real\\Handwriting_g\\ground_truth_8.npz",
+      "data_real\\Handwriting_g\\ground_truth_9.npz",
+      "data_real\\Handwriting_g\\ground_truth_10.npz",
+      "data_real\\Handwriting_g\\ground_truth_11.npz",
+      "data_real\\Handwriting_g\\ground_truth_12.npz",
+      "data_real\\Handwriting_g\\ground_truth_13.npz",
+      "data_real\\Handwriting_g\\ground_truth_14.npz"
+    ],
+    "status": "ok"
+  }
+]

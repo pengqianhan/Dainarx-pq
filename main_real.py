@@ -245,6 +245,26 @@ def evaluate_real_dataset(
     return result
 
 
+def write_markdown_summary(results, output_path: Path):
+    lines = [
+        "# DAINARX Real Dataset Results",
+        "",
+        "| Dataset | max_diff | mean_diff |",
+        "| --- | ---: | ---: |",
+    ]
+
+    for result in results:
+        if "max_diff" not in result or "mean_diff" not in result:
+            continue
+        lines.append(
+            f"| {result['dataset']} | {result['max_diff']} | {result['mean_diff']} |"
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as file:
+        file.write("\n".join(lines) + "\n")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run the main pipeline on real .npz datasets with the first files used for training."
@@ -252,6 +272,7 @@ def parse_args():
     parser.add_argument("--data-root", type=Path, default=Path("data_real"))
     parser.add_argument("--train-count", type=int, default=3)
     parser.add_argument("--output", type=Path, default=Path("result") / "real_eval_log.json")
+    parser.add_argument("--markdown-output", type=Path, default=Path("result") / "dainarx_real.md")
     parser.add_argument("--plot", action="store_true")
     return parser.parse_args()
 
@@ -283,11 +304,13 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as file:
         json.dump(results, file, indent=2)
+    write_markdown_summary(results, args.markdown_output)
 
     print("\nEvaluation log:")
     for result in results:
         print(json.dumps(result, indent=2))
     print(f"\nSaved to: {args.output}")
+    print(f"Saved markdown to: {args.markdown_output}")
 
 
 if __name__ == "__main__":
